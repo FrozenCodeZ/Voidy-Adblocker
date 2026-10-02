@@ -1,0 +1,12 @@
+{
+  "name": "voidy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "icons": "node tools/render-icons.cjs",
+    "lists": "python tools/refresh_lists.py"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

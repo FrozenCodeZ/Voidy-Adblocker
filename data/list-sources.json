@@ -1,0 +1,208 @@
+{
+ "_about": "Where Voidy's domain block lists come from. Read by tools/build_static_rules.py (bundled lists) and src/list-updates.js (automatic updates).",
+ "categories": {
+  "security": {
+   "everyHours": 24,
+   "sources": [
+    {
+     "name": "HaGeZi tif.mini.txt",
+     "file": "tif.mini.txt",
+     "format": "domains",
+     "urls": [
+      "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/tif.mini-onlydomains.txt",
+      "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/tif.mini-onlydomains.txt"
+     ]
+    },
+    {
+     "name": "HaGeZi fake.txt",
+     "file": "fake.txt",
+     "format": "domains",
+     "urls": [
+      "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/fake-onlydomains.txt",
+      "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt"
+     ]
+    },
+    {
+     "name": "HaGeZi tif.ips.txt",
+     "file": "tif.ips.txt",
+     "format": "domains",
+     "urls": [
+      "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/ips/tif.txt",
+      "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/ips/tif.txt"
+     ]
+    },
+    {
+     "name": "URLhaus (abuse.ch) via malware-filter",
+     "file": "urlhaus-domains.txt",
+     "format": "domains",
+     "urls": [
+      "https://curbengh.github.io/malware-filter/urlhaus-filter-domains.txt",
+      "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-domains.txt"
+     ]
+    }
+   ],
+   "replaceStale": false
+  },
+  "ads": {
+   "everyHours": 96,
+   "sources": [
+    {
+     "name": "EasyList ad servers",
+     "format": "abp",
+     "urls": [
+      "https://easylist.to/easylist/easylist.txt",
+      "https://easylist-downloads.adblockplus.org/easylist.txt"
+     ],
+     "sections": [
+      "easylist/easylist_adservers.txt",
+      "easylist_adult/adult_adservers.txt"
+     ]
+    },
+    {
+     "name": "HaGeZi popupads.txt",
+     "file": "popupads.txt",
+     "format": "domains",
+     "urls": [
+      "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/popupads-onlydomains.txt",
+      "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/popupads-onlydomains.txt"
+     ]
+    }
+   ],
+   "curated": [
+    "doubleclick.net",
+    "googlesyndication.com",
+    "googleadservices.com",
+    "imasdk.googleapis.com",
+    "ads.microsoft.com",
+    "bingads.microsoft.com",
+    "advertising.apple.com",
+    "api-adservices.apple.com",
+    "iadsdk.apple.com",
+    "udc.yahoo.com",
+    "adtago.s3.amazonaws.com",
+    "advice-ads.s3.amazonaws.com",
+    "adx1js.s3.amazonaws.com",
+    "entrecard.s3.amazonaws.com"
+   ]
+  },
+  "privacy": {
+   "everyHours": 96,
+   "sources": [
+    {
+     "name": "EasyPrivacy",
+     "format": "abp",
+     "urls": [
+      "https://easylist.to/easylist/easyprivacy.txt",
+      "https://easylist-downloads.adblockplus.org/easyprivacy.txt"
+     ],
+     "sections": [
+      "easyprivacy/"
+     ],
+     "skipSections": [
+      "allowlist",
+      "perimeterx"
+     ]
+    },
+    {
+     "name": "HaGeZi pro.txt",
+     "file": "pro.txt",
+     "format": "domains",
+     "urls": [
+      "https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro-onlydomains.txt",
+      "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/pro-onlydomains.txt"
+     ]
+    }
+   ],
+   "curated": [
+    "analytics.twitter.com",
+    "eu.posthog.com",
+    "i.posthog.com",
+    "us.i.posthog.com",
+    "kochava.com",
+    "a.klaviyo.com",
+    "prd.jwpltx.com",
+    "xp.apple.com",
+    "rudderstack.com",
+    "tagmanager.google.com"
+   ]
+  }
+ },
+ "neverBlock": [
+  "ajax.googleapis.com",
+  "akamaihd.net",
+  "amazonaws.com",
+  "app.link",
+  "apple.com",
+  "azureedge.net",
+  "bit.ly",
+  "bnc.lt",
+  "cdn.jsdelivr.net",
+  "cdnjs.cloudflare.com",
+  "challenges.cloudflare.com",
+  "cloudfront.net",
+  "fastly.net",
+  "fonts.googleapis.com",
+  "github.com",
+  "githubusercontent.com",
+  "googleapis.com",
+  "googlevideo.com",
+  "gstatic.com",
+  "icloud.com",
+  "microsoft.com",
+  "recaptcha.net",
+  "t.co",
+  "unpkg.com",
+  "youtube.com",
+  "ytimg.com"
+ ],
+ "domainsPerRule": 1000,
+ "youtube": {
+  "everyHours": 6,
+  "urls": [
+   "https://raw.githubusercontent.com/FrozenCodeZ/Voidy-Adblocker/main/data/youtube.json",
+   "https://cdn.jsdelivr.net/gh/FrozenCodeZ/Voidy-Adblocker@main/data/youtube.json"
+  ]
+ },
+ "tripwire": [
+  "google.com",
+  "www.google.com",
+  "youtube.com",
+  "www.youtube.com",
+  "wikipedia.org",
+  "microsoft.com",
+  "apple.com",
+  "amazon.com",
+  "facebook.com",
+  "www.facebook.com",
+  "instagram.com",
+  "netflix.com",
+  "github.com",
+  "paypal.com",
+  "ebay.com",
+  "reddit.com",
+  "linkedin.com",
+  "cloudflare.com",
+  "gstatic.com",
+  "googleapis.com",
+  "bing.com",
+  "yahoo.com",
+  "twitter.com",
+  "x.com",
+  "whatsapp.com",
+  "office.com",
+  "live.com",
+  "icloud.com",
+  "spotify.com",
+  "zoom.us",
+  "dropbox.com",
+  "adobe.com",
+  "stackoverflow.com",
+  "mozilla.org",
+  "wordpress.org",
+  "outlook.com",
+  "office365.com",
+  "live.net",
+  "bbc.com",
+  "nytimes.com"
+ ]
+}

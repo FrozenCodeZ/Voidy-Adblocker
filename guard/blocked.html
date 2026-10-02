@@ -1,0 +1,52 @@
+<!doctype html>
+<html data-theme="void">
+<head>
+  <meta charset="utf-8">
+  <title>Blocked: dangerous site</title>
+  <link rel="stylesheet" href="../lib/theme.css">
+  <script src="../lib/theme.js"></script>
+  <style>
+    :root { --bg:#14171f; --card:#1d2230; --ink:#eef0f5; --ink2:#a9afbd; --ink3:#747b8c; --bad:#e8566f; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); }
+    body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); display: grid; place-items: center; min-height: 100vh; padding: 16px; box-sizing: border-box; }
+    .box { width: min(560px, 100%); background: radial-gradient(120% 60% at 0% 0%, color-mix(in srgb, var(--bad) 18%, transparent), transparent 60%), var(--card);
+           border: 1px solid color-mix(in srgb, var(--bad) 40%, transparent); border-radius: 14px; padding: 26px 26px 22px; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+    .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--bad); color: #10131a; display: grid; place-items: center; font-weight: 900; font-size: 22px; }
+    h1 { font-size: 20px; margin: 14px 0 6px; }
+    p { color: var(--ink2); margin: 0 0 12px; }
+    .dest { background: #151924; border-radius: 10px; padding: 10px 12px; margin: 14px 0; border-left: 3px solid var(--bad); }
+    .label { color: var(--ink3); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+    .site { font-size: 18px; font-weight: 700; word-break: break-all; }
+    .url { font: 12px/1.4 ui-monospace, Consolas, monospace; color: var(--ink2); word-break: break-all; margin-top: 4px; max-height: 4.2em; overflow: auto; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    button { font: inherit; font-weight: 600; border-radius: 9px; padding: 10px 16px; cursor: pointer; border: 0; }
+    #back { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; flex: 1; }
+    #go { background: transparent; color: var(--ink2); border: 1px solid rgba(255,255,255,.14); }
+    .fine { color: var(--ink3); font-size: 12.5px; margin-top: 14px; }
+    [hidden] { display: none !important; }
+    #real { color: var(--a1); font-weight: 700; text-decoration: none; font-size: 14px; }
+    #real:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="box" id="box">
+    <div class="icon">!</div>
+    <h1 id="title">This site is on a malware / phishing list</h1>
+    <p id="text">Voidy stopped this page before it loaded. Sites on this list have been reported for spreading malware, scams or fake log-in pages.</p>
+    <div class="dest">
+      <div class="label">You were about to open</div>
+      <div class="site" id="site">—</div>
+      <div class="url" id="url"></div>
+    </div>
+    <div class="row">
+      <button id="back">Go back to safety</button>
+      <button id="go">Continue anyway</button>
+    </div>
+    <p class="fine"><a id="real" hidden rel="noopener">Go to the real site</a></p>
+    <p class="fine" id="fine">Lists are sometimes wrong. "Continue anyway" allows this one site until you close the browser; it isn't saved.</p>
+    <p class="fine" id="framed" hidden>This warning can't be used from inside another page.</p>
+  </div>
+  <script src="../src/lookalike.js"></script>
+  <script src="blocked.js"></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!doctype html>
+<html data-theme="void">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/theme.css">
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="../lib/voidy.css">
+  <link rel="stylesheet" href="voidy.css">
+  <link rel="stylesheet" href="../lib/privacy-controls.css">
+  <script src="../lib/theme.js"></script>
+</head>
+<body class="cosmos">
+  <header class="top">
+    <div id="voidy-logo" aria-hidden="true"></div>
+    <span class="brand">Voidy</span>
+    <span class="site" id="host" title="">—</span>
+  </header>
+
+  <!-- Voidy: the mascot is built by lib/voidy-mascot.js -->
+  <section class="hero">
+    <button class="hero-btn v-style" id="voidy-style" type="button" aria-expanded="false" aria-controls="style-panel" title="Customize Voidy"><i data-ico="sparkle"></i></button>
+    <button class="hero-btn v-motion" id="voidy-motion" type="button" aria-pressed="true" aria-label="Animations"><i data-ico="orbit"></i></button>
+    <div id="voidy" class="is-happy" role="img" aria-label="Voidy, the ad-eating black hole"></div>
+    <p class="voidy-says" id="voidy-says" aria-live="polite"></p>
+  </section>
+  <section class="card style-panel" id="style-panel" hidden>
+    <h4><i data-ico="galaxy"></i>Background</h4>
+    <div class="chips" id="theme-chips"></div>
+    <h4><i data-ico="hole"></i>Voidy's form</h4>
+    <div class="chips form-chips" id="form-chips"></div>
+    <h4><i data-ico="eye"></i>Eyes</h4>
+    <div class="chips eye-chips" id="eye-chips"></div>
+    <h4><i data-ico="star"></i>Accessory</h4>
+    <div class="chips" id="acc-chips"></div>
+  </section>
+
+  <!-- Protection -->
+  <section class="card protect" id="protect">
+    <div class="protect-row">
+      <label class="switch" title="Protect this site">
+        <input type="checkbox" id="power">
+        <span class="slider"></span>
+      </label>
+      <div class="protect-text">
+        <div class="protect-title" id="state">Protected</div>
+        <div class="protect-sub" id="hint">Running silently in the background</div>
+      </div>
+      <span class="pulse" id="pulse" aria-hidden="true"></span>
+    </div>
+    <div class="modes" id="modes">
+      <button data-mode="auto" style="--m1:var(--a1);--m2:var(--a2)"><i data-ico="orbit"></i>Auto</button>
+      <button data-mode="full" style="--m1:var(--a2);--m2:var(--a1)"><i data-ico="hole"></i>Full</button>
+      <button data-mode="lite" style="--m1:#4fc3ff;--m2:#5c83f2"><i data-ico="moon"></i>Lite</button>
+      <button data-mode="off" style="--m1:#f0566f;--m2:#c2334f"><i data-ico="power"></i>Off</button>
+    </div>
+      <div class="yt-build-warning" id="yt-build-warning" hidden>Extension files changed. Reload Voidy in Chrome Extensions before comparing YouTube starts.</div>
+    <div class="disguise" id="disguise" title="How much Auto is disguising the blocker on this site">
+      <span class="dg-label"><i data-ico="shades"></i>Stealth</span>
+      <div class="dg-meter" id="dg-meter"><i></i><i></i><i></i></div>
+      <span class="dg-text" id="dg-text">not needed</span>
+    </div>
+    <button class="wallnow" id="wallnow" hidden><i data-ico="shades"></i>Seeing a wall right now? Go stealthier</button>
+
+    <button class="adv-toggle" id="adv-toggle" aria-expanded="false">
+      <i data-ico="mask" class="adv-ico"></i><span>More protection levels</span><i data-ico="down" class="chev"></i>
+    </button>
+    <div class="adv" id="adv" hidden>
+      <div class="modes stealth-modes" id="stealth-modes">
+        <button data-mode="stealth1" style="--m1:#8f7dff;--m2:#6a4fe0"><i data-ico="shades"></i>Stealth 1</button>
+        <button data-mode="stealth2" style="--m1:#c46cff;--m2:#9a3fe0"><i data-ico="cloak"></i>Stealth 2</button>
+        <button data-mode="stealth3" style="--m1:#ff5c93;--m2:#d63d72"><i data-ico="mask"></i>Stealth 3</button>
+      </div>
+      <p class="adv-hint" id="adv-hint">Full blocks ads normally. Stealth 1 to 3 disguise that blocking more and more so the site can't tell. Pick one yourself if you already know a site fights back.</p>
+    </div>
+
+    <label class="widgets" id="widgets-row" title="Cookie banners, newsletter pop-ups, chat bubbles, notification prompts">
+      <input type="checkbox" id="widgets"><i data-ico="comet" class="row-ico"></i>
+      <span>Hide pop-ups &amp; widgets on this site</span>
+    </label>
+    <label class="widgets" id="guard-row" title="Ask before this site sends you elsewhere or opens pop-ups on its own">
+      <input type="checkbox" id="guard"><i data-ico="wormhole" class="row-ico"></i>
+      <span id="guard-label">Guard redirects &amp; pop-ups on this site</span>
+    </label>
+    <button class="pick-btn" id="pick" type="button" title="Click an ad or box on the page and Voidy hides it on this site from now on">
+      <i data-ico="hide"></i><span><b>Hide an ad on this page</b><small>Click it, and Voidy eats it for good. You can also right-click an ad and choose Hide this with Voidy.</small></span>
+    </button>
+    <button class="broke-link" id="unhide" type="button" hidden><i data-ico="eye"></i><span id="unhide-text">Show my hidden items again</span></button>
+    <button class="broke-link" id="broke" type="button"><i data-ico="meteor"></i>Site looks broken? Ease off here</button>
+    <button class="broke-link" id="report" type="button" title="Copies what Voidy blocked on this page (site names only) and opens the feedback form"><i data-ico="chat"></i>Report a problem with this site</button>
+    <div class="note" id="report-note" hidden></div>
+    <div class="stuck" id="stuck" hidden>
+      <div class="stuck-title">This site keeps detecting the blocker.</div>
+      <div class="stuck-btns">
+        <button data-choice="wall">Accept the wall</button>
+        <button data-choice="off">Turn off here</button>
+        <button data-choice="stealth3">Max stealth</button>
+      </div>
+    </div>
+    <div class="note" id="accepted" hidden>You accepted this site's wall. Auto won't climb or ask here any more. Pick <b>Auto</b> again to let it retry.</div>
+    <div class="note warn" id="offwall" hidden>This site still shows an ad-block message with Voidy <b>off</b> here, so something else is blocking its ads. Usually that is a DNS filter (your router, Pi-hole, NextDNS or a "secure DNS" setting), antivirus web protection, a VPN or another extension. Turning Voidy off can't change that, but Stealth can often fool the site anyway.</div>
+  </section>
+
+  <!-- Activity -->
+  <section class="card activity">
+    <div class="act-head">
+      <span class="card-title"><i data-ico="galaxy"></i>Activity</span>
+      <div class="scope" id="scope">
+        <button data-scope="page" class="on">This page</button>
+        <button data-scope="all">All time</button>
+      </div>
+    </div>
+
+    <div class="ring-row">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120" id="ring" role="img" aria-label="Blocked by category">
+          <circle class="track" cx="60" cy="60" r="52"></circle>
+          <g id="segs"></g>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" id="total">0</div>
+          <div class="ring-label" id="total-label">eaten</div>
+        </div>
+      </div>
+      <ul class="catlist" id="catlist"></ul>
+    </div>
+    <div class="empty" id="act-empty" hidden>Nothing blocked here yet.</div>
+    <div class="since" id="since"></div>
+  </section>
+
+  <div class="tiles">
+    <div class="tile" style="--c:var(--c-hid)"><i data-ico="hide"></i><div class="tile-num" id="hidden">0</div><div class="tile-label">Ad boxes hidden</div></div>
+    <div class="tile" style="--c:var(--c-wid)"><i data-ico="comet"></i><div class="tile-num" id="annoy">0</div><div class="tile-label">Pop-ups &amp; widgets</div></div>
+    <div class="tile" style="--c:var(--c-red)"><i data-ico="wormhole"></i><div class="tile-num" id="held">0</div><div class="tile-label">Redirects held</div></div>
+  </div>
+
+    <section class="card" id="extra-privacy"></section>
+    <details class="card privacy-details site-controls" id="site-controls">
+      <summary><i data-ico="lock"></i>Script &amp; connection controls <span class="sc-on" id="sc-on" hidden></span></summary>
+      <p class="privacy-note">For this site only. Stronger options can break parts of a site; the tab reloads when you change one.</p>
+      <label class="sc-row"><input type="checkbox" data-sc="scripts3p"><span><b>Block scripts from other sites</b><small>Keeps the site's own code; stops outside widgets and most trackers.</small></span></label>
+      <label class="sc-row"><input type="checkbox" data-sc="frames3p"><span><b>Block embeds from other sites</b><small>Outside videos, maps, comment boxes and ad frames won't load.</small></span></label>
+      <label class="sc-row"><input type="checkbox" data-sc="sockets3p"><span><b>Block live connections to other sites</b><small>WebSockets used by chat widgets and live trackers.</small></span></label>
+      <label class="sc-row"><input type="checkbox" data-sc="scriptsAll"><span><b>Block all JavaScript</b><small>Strongest. Most modern sites stop working.</small></span></label>
+    </details>
+    <details class="card privacy-details" id="yt-diagnostics" hidden><summary><i data-ico="rocket"></i>YouTube startup details</summary><p class="privacy-note">Local timings only. No video title, URL or account information is recorded.</p><p class="privacy-note" id="yt-diagnostic-status" role="status"></p><pre id="yt-timing" style="white-space:pre-wrap;font-size:11px"></pre><button class="ghost" id="yt-copy">Copy latest details</button><span id="yt-copy-status" role="status"></span></details>
+
+  <!-- Support: coffee + feedback -->
+  <section class="card support" id="support">
+    <div class="sup-art" aria-hidden="true">
+      <div id="support-voidy"></div>
+      <svg class="sup-cup" viewBox="0 0 48 48">
+        <path class="steam s1" d="M17 14 q-3 -4 0 -8 q3 -4 0 -8"/><path class="steam s2" d="M24 14 q-3 -4 0 -8 q3 -4 0 -8"/><path class="steam s3" d="M31 14 q-3 -4 0 -8 q3 -4 0 -8"/>
+        <path class="mug" d="M9 18 h29 v12 a10 10 0 0 1 -10 10 h-9 a10 10 0 0 1 -10 -10 z"/>
+        <path class="handle" d="M38 21 h3 a5 5 0 0 1 0 10 h-3"/>
+        <path class="coffee" d="M11 20 h25 v2 h-25 z"/>
+        <path class="heart-latte" d="M23.5 30 l-4 -3.6 a2.3 2.3 0 0 1 4 -2.6 a2.3 2.3 0 0 1 4 2.6 z"/>
+      </svg>
+      <span class="sup-heart h1">♥</span><span class="sup-heart h2">✦</span><span class="sup-heart h3">♥</span><span class="sup-heart h4">✧</span>
+    </div>
+    <div class="sup-text">
+      <b>Like Voidy so far?</b>
+      <span>Buy me a coffee! It keeps Voidy free and hungry.</span>
+      <a class="donate" id="donate" target="_blank" rel="noopener" hidden><i data-ico="coffee"></i>Buy me a coffee</a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <a class="ghost" id="feedback" target="_blank" rel="noopener" hidden><i data-ico="chat"></i>Send feedback</a>
+    <a class="link" id="dash" href="#"><i data-ico="telescope"></i>Dashboard &amp; settings</a>
+  </footer>
+
+  <script src="../lib/icons.js"></script>
+  <script src="../lib/voidy-mascot.js"></script>
+  <script src="../lib/privacy-controls.js"></script>
+  <script src="../lib/voidy-life.js"></script>
+  <script src="voidy.js"></script>
+  <script src="../lib/cosmos.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voidy: a free ad blocker for Chrome</title>
+  <meta name="description" content="Voidy is a free, open-source ad blocker for Chrome. It blocks ads, trackers and scam sites before they load, and shows you what it ate.">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="img/icon.png">
+  <link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <a class="brand" href="./"><img src="img/icon.png" alt="" width="28" height="28">Voidy</a>
+    <nav aria-label="Main">
+      <a href="#eats">What it blocks</a>
+      <a href="#how">How it works</a>
+      <a href="#numbers">Test results</a>
+      <a href="#maximum">Maximum protection</a>
+      <a href="#yours">Make it yours</a>
+      <a href="https://github.com/FrozenCodeZ/Voidy-Adblocker">Source code</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hole" aria-hidden="true">
+        <img class="disk" src="img/blackhole.webp" alt="" width="1600" height="800" fetchpriority="high">
+        <div class="clutter">
+          <span class="bit ad-banner">Ad</span>
+          <span class="bit cookie">We value your privacy. Accept all?</span>
+          <span class="bit popup">Get 10% off! Enter your email</span>
+          <span class="bit tracker">tracker.js</span>
+          <span class="bit ad-box">Sponsored</span>
+        </div>
+      </div>
+      <h1 id="hero-title">Voidy eats ads.</h1>
+      <p class="lead">A free ad blocker for Chrome. It blocks ads, trackers and scam sites before they load, and shows you exactly what it ate.</p>
+      <div class="cta">
+        <a class="button primary" href="https://github.com/FrozenCodeZ/Voidy-Adblocker#install-from-source">Add Voidy to Chrome</a>
+        <a class="button" href="https://github.com/FrozenCodeZ/Voidy-Adblocker">Read the source code</a>
+      </div>
+      <p class="fine">Version 1.0.0. Free, with no account. Open source under GPL-3.0.</p>
+    </section>
+
+    <section class="eats wrap" id="eats" aria-labelledby="eats-title">
+      <div>
+        <h2 id="eats-title">What Voidy blocks</h2>
+        <p class="sub">Click the black hole in your toolbar on any site to see what Voidy stopped there, and to change how hard it works on that site.</p>
+        <dl class="cats">
+          <div class="cat c-ads"><dt>Ads</dt><dd>Banners, video ads and pop-unders, blocked before they download. YouTube videos start without ads, Twitch ad breaks are skipped, and Reddit's promoted posts are hidden.</dd></div>
+          <div class="cat c-trk"><dt>Trackers</dt><dd>Analytics scripts, tracking pixels and the companies that follow you from site to site.</dd></div>
+          <div class="cat c-mal"><dt>Dangerous sites</dt><dd>Malware, phishing and scam sites, plus addresses that imitate a well-known brand.</dd></div>
+          <div class="cat c-wid"><dt>Pop-ups and clutter</dt><dd>Cookie banners (Voidy clicks Reject for you), newsletter pop-ups, chat bubbles and "allow notifications?" prompts.</dd></div>
+        </dl>
+      </div>
+      <figure class="shot popup-shot">
+        <img src="img/popup.webp" alt="The Voidy popup on a news site. It says Voidy ate 9 things on this page, shows the site set to Auto, and lists switches for pop-ups and redirects." width="368" height="672" loading="lazy">
+      </figure>
+    </section>
+
+    <div class="band band-indigo" id="how">
+      <section class="wrap" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <p class="sub">Everything happens inside Chrome, on your computer. Voidy steps in at three points while a page loads.</p>
+        <ol class="flows">
+          <li class="flow f-net">
+            <span class="node">The page asks for <code>tracker.js</code></span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node">Voidy checks the block lists stored on your computer</span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node end">Blocked before it downloads</span>
+          </li>
+          <li class="flow f-page">
+            <span class="node">An empty ad box or a cookie banner appears</span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node">Voidy matches it against hiding rules</span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node end">Hidden, and the page can scroll again</span>
+          </li>
+          <li class="flow f-act">
+            <span class="node">The page tries to send you to another site on its own</span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node">Voidy holds the jump and shows where it goes</span>
+            <span class="arrow" aria-hidden="true"></span>
+            <span class="node end">You choose: stay, or go there</span>
+          </li>
+        </ol>
+        <p class="note">The block lists come from EasyList, EasyPrivacy, HaGeZi and URLhaus, and update themselves. Only the lists are downloaded; nothing about you is sent.</p>
+      </section>
+    </div>
+
+    <section class="numbers wrap" id="numbers" aria-labelledby="numbers-title">
+      <h2 id="numbers-title">Test results</h2>
+      <div class="charts">
+        <figure class="chart">
+          <figcaption>
+            <h3>40 real sites, four setups</h3>
+            <p>We opened the same 40 popular sites (news, recipes, health, tech, games, weather and forums) in a fresh Chrome profile with each blocker, and counted requests that still reached well-known ad and tracking companies. Fewer is better.</p>
+          </figcaption>
+          <p class="baseline">Without a blocker, <strong>9,905</strong> requests reached them.</p>
+          <table class="bars">
+            <caption>Requests that still got through. Measured 1 October 2026.</caption>
+            <thead><tr><th scope="col">Blocker</th><th scope="col">Requests that got through</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">uBlock Origin Lite</th><td><span class="bar" style="--w:100%"></span><b>111</b></td></tr>
+              <tr><th scope="row">Ghostery</th><td><span class="bar" style="--w:83.8%"></span><b>93</b></td></tr>
+              <tr class="us"><th scope="row">Voidy</th><td><span class="bar" style="--w:7.2%"></span><b>8</b></td></tr>
+            </tbody>
+          </table>
+          <p class="note">All three hid every visible ad box, and none made a site lose its content. uBlock Origin Lite and Ghostery let some ad scripts load in a harmless form instead of blocking them, and this count includes those.</p>
+        </figure>
+        <figure class="chart">
+          <figcaption>
+            <h3>Public ad-block test sites</h3>
+            <p>Scores as each test site reported them for Voidy with its default settings. Higher is better.</p>
+          </figcaption>
+          <table class="bars score">
+            <caption>Measured 1 October 2026. Each site checks its own list, so scores from different sites don't compare.</caption>
+            <thead><tr><th scope="col">Test site</th><th scope="col">Score</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><a href="https://adblock.turtlecute.org/">adblock.turtlecute.org</a><small>132 of 132 checks blocked</small></th><td><span class="bar" style="--w:100%"></span><b>100%</b></td></tr>
+              <tr><th scope="row">Blockify Adblock Test<small>76 of 79 ad networks blocked</small></th><td><span class="bar" style="--w:96%"></span><b>96%</b></td></tr>
+              <tr><th scope="row">Super Adblock Test<small>456 of 482 checks blocked</small></th><td><span class="bar" style="--w:92%"></span><b>92%</b></td></tr>
+            </tbody>
+          </table>
+          <p class="note">The checks Voidy leaves unblocked are mostly link redirectors, sign-in services and video players. Blocking those would break links and logins on real sites.</p>
+        </figure>
+      </div>
+    </section>
+
+    <div class="band band-ember">
+      <section class="safety wrap" aria-labelledby="safety-title">
+        <h2 id="safety-title">Warnings before scams load</h2>
+        <div class="pair">
+          <figure class="shot">
+            <img src="img/lookalike.webp" alt="Voidy's warning page: This site may be pretending to be paypal.com, with buttons to go back to safety or continue anyway." width="634" height="450" loading="lazy">
+            <figcaption><b>Look-alike sites.</b> Addresses that copy a brand, like "paypa1.com" or a name written with Cyrillic letters, get a warning before you type a password. The check runs on your computer.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="img/guard.webp" alt="Voidy's redirect prompt over a recipe page: This page tried to send you somewhere else, going to prize-winner-claim.example, with Stay here and Go there buttons." width="820" height="510" loading="lazy">
+            <figcaption><b>Surprise redirects.</b> When a page tries to send you somewhere on its own, Voidy shows where it goes and any warning signs. Nothing happens unless you choose to go.</figcaption>
+          </figure>
+        </div>
+        <p class="sub">Sites on the malware and phishing lists stop at a warning page before they load. Banks, payment providers and sign-in services are left alone, so checkouts and logins keep working.</p>
+      </section>
+    </div>
+
+    <section class="privacy wrap" id="privacy" aria-labelledby="privacy-title">
+      <div>
+        <h2 id="privacy-title">Voidy doesn't watch you</h2>
+        <p class="sub">Voidy has no account, no servers and no analytics. Your settings and statistics stay in your browser. It only connects to download updated block lists, to fetch a small file of YouTube settings from its GitHub page, and when you click feedback or buy me a coffee.</p>
+        <ul class="ticks">
+          <li>Sends the Global Privacy Control signal, which asks sites not to sell or share your data.</li>
+          <li>Fingerprinting protection for one site, or for every site you visit, including new ones.</li>
+          <li>WebRTC IP protection, so video-call features can't reveal your address.</li>
+          <li>Per-site switches that block other sites' scripts, embeds and live connections.</li>
+        </ul>
+        <p><a href="https://github.com/FrozenCodeZ/Voidy-Adblocker/blob/main/PRIVACY.md">Read the privacy policy</a></p>
+      </div>
+      <figure class="shot">
+        <img src="img/privacy.webp" alt="Voidy's Extra privacy panel, with the Every site setting on Extra and a Maximum privacy switch for this site." width="344" height="389" loading="lazy">
+      </figure>
+    </section>
+
+    <div class="band band-rose" id="maximum">
+      <section class="max wrap" aria-labelledby="max-title">
+        <div class="max-grid">
+          <figure class="shot max-shot">
+            <img src="img/maximum.webp" alt="Voidy's Extra privacy panel with Every site set to Maximum and every protection for this site switched on: strict canvas, WebGL blocked, audio blocked, font queries blocked, browser hints limited, fingerprint collectors blocked and WebRTC off." width="344" height="1042" loading="lazy">
+          </figure>
+          <div>
+            <h2 id="max-title">Maximum protection</h2>
+            <p class="sub">Turn on Maximum for one site you don't trust, or set Every site to Maximum and every page you open is protected from its first load, including sites you have never visited. Sites you set to Off are left alone, and any single site can be lowered again.</p>
+            <table class="maxtable">
+              <caption>What Maximum turns on, and what it can break.</caption>
+              <thead><tr><th scope="col">Protection</th><th scope="col">What it stops</th><th scope="col">What can break</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Strict canvas</th><td>Sites drawing a hidden image to identify your device</td><td>Exporting images from online editors</td></tr>
+                <tr><th scope="row">WebGL blocked</th><td>Reading your graphics card to identify you</td><td>3D maps and browser games</td></tr>
+                <tr><th scope="row">Audio blocked</th><td>Identifying you from how your device processes sound</td><td>Games and calls in the browser (normal video and audio still play)</td></tr>
+                <tr><th scope="row">Fonts hidden</th><td>Listing your installed fonts and measuring text</td><td>Some online document editors</td></tr>
+                <tr><th scope="row">Fewer browser hints</th><td>Detailed device and browser version reports</td><td>Sites that pick downloads for your device</td></tr>
+                <tr><th scope="row">Collectors blocked</th><td>Known fingerprinting services</td><td>Some fraud checks on shops and banks</td></tr>
+                <tr><th scope="row">WebRTC off</th><td>Video-call features revealing your IP address</td><td>Video calls and screen sharing</td></tr>
+              </tbody>
+            </table>
+            <p class="note">For most people, Every site on Extra is the better everyday choice: it blocks the common fingerprinting tricks and keeps calls and games working. Save Maximum for sites you don't trust.</p>
+          </div>
+        </div>
+        <div class="pair max-pair">
+          <figure class="shot">
+            <img src="img/controls.webp" alt="Voidy's Script and connection controls for one site, with scripts, embeds and live connections from other sites blocked." width="344" height="319" loading="lazy">
+            <figcaption><b>Script and connection controls.</b> For one site, block scripts, embedded frames and live connections that come from other sites, or switch off JavaScript completely. The site's own content keeps working.</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="img/malware.webp" alt="Voidy's warning page: This site is on a malware or phishing list, with Go back to safety and Continue anyway buttons." width="634" height="434" loading="lazy">
+            <figcaption><b>Dangerous-site lists, updated daily.</b> Sites reported for malware, phishing, scams and fake shops (from HaGeZi's threat feeds and URLhaus) stop at this page before anything loads.</figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
+
+    <div class="band band-indigo">
+      <section class="dash wrap" aria-labelledby="dash-title">
+        <h2 id="dash-title">See everything it stopped</h2>
+        <p class="sub">The dashboard shows what Voidy blocked and which companies it stopped, in plain words, and explains what every setting does. This one is from six real sites: a recipe site, two tech sites, a business site, a weather site and a news site.</p>
+        <figure class="shot wide">
+          <img src="img/dashboard.webp" alt="Voidy's dashboard: 194 things eaten, split into 87 ads, 80 trackers and 27 pop-ups and widgets, a chart by category, a list of top companies, and a protection check with 7 of 10 protections on." width="1200" height="806" loading="lazy">
+        </figure>
+      </section>
+    </div>
+
+    <section class="yours wrap" id="yours" aria-labelledby="yours-title">
+      <h2 id="yours-title">Make Voidy yours</h2>
+      <p class="sub">Voidy is a little black hole with moods. Pick its form, its eyes and an accessory, and a colour theme for the popup and dashboard. It reacts when you poke it, and gets sleepy if you ignore it.</p>
+      <ul class="looks" aria-label="Six of Voidy's looks">
+        <li><img src="img/look-blackhole.webp" alt="Black hole Voidy with shiny eyes and a crown" width="300" height="229" loading="lazy"></li>
+        <li><img src="img/look-nebula.webp" alt="Nebula Voidy, a pink cloud with starry eyes and a bow" width="300" height="229" loading="lazy"></li>
+        <li><img src="img/look-supernova.webp" alt="Supernova Voidy, a spiky star with anime eyes and a wizard hat" width="300" height="229" loading="lazy"></li>
+        <li><img src="img/look-pulsar.webp" alt="Pulsar Voidy with bean eyes and headphones" width="300" height="229" loading="lazy"></li>
+        <li><img src="img/look-aurora.webp" alt="Aurora Voidy with chill eyes and a sprout" width="300" height="229" loading="lazy"></li>
+        <li><img src="img/look-galaxy.webp" alt="Galaxy Voidy with pixel eyes and cat ears" width="300" height="229" loading="lazy"></li>
+      </ul>
+      <div class="yours-detail">
+        <dl class="counts">
+          <div><dt>9</dt><dd>forms, from black hole to comet</dd></div>
+          <div><dt>7</dt><dd>eye styles</dd></div>
+          <div><dt>8</dt><dd>accessories, from a crown to a sprout</dd></div>
+          <div><dt>7</dt><dd>colour themes, or pick your own two colours</dd></div>
+        </dl>
+        <figure class="shot">
+          <img src="img/customize.webp" alt="The popup's customize panel with colour themes and Voidy's forms." width="368" height="560" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <section class="all wrap" aria-labelledby="all-title">
+      <h2 id="all-title">Everything else Voidy does</h2>
+      <div class="groups">
+        <div class="group c-ads">
+          <h3>Blocking</h3>
+          <ul>
+            <li>Four modes per site: Auto, Full, Lite and Off</li>
+            <li>Stealth 1 to 3 for sites that refuse to work with an ad blocker</li>
+            <li>Block lists that update themselves, daily for dangerous sites</li>
+            <li>A blocked count on the toolbar icon</li>
+          </ul>
+        </div>
+        <div class="group c-wid">
+          <h3>Clean-up</h3>
+          <ul>
+            <li>Hide any ad yourself: right-click it and choose Hide this with Voidy</li>
+            <li>Notification prompts allowed only right after you click</li>
+            <li>Un-freezes pages that stay locked after a pop-up is removed</li>
+            <li>Each site has its own pop-ups and widgets switch</li>
+          </ul>
+        </div>
+        <div class="group c-mal">
+          <h3>Safety</h3>
+          <ul>
+            <li>Catches invisible links laid over the page</li>
+            <li>Asks before a link opens an app on your computer</li>
+            <li>Blocks tabs that swap themselves behind a pop-up</li>
+            <li>"Always allow" for jumps between sites you trust</li>
+          </ul>
+        </div>
+        <div class="group c-trk">
+          <h3>Control</h3>
+          <ul>
+            <li>One click eases off on a site that looks broken</li>
+            <li>An activity log of every decision, in plain words</li>
+            <li>Backup and restore your settings as one file</li>
+            <li>Report a problem: copies a short, site-names-only report</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="limits wrap" aria-labelledby="limits-title">
+      <h2 id="limits-title">What Voidy can't do</h2>
+      <p class="sub">No ad blocker catches every ad, and YouTube changes its tricks often, so an ad can slip through now and then. Some sites detect ad blockers; Voidy's Stealth modes fool many of them, but not all. If a site breaks, one click in the popup eases off on that site only.</p>
+    </section>
+
+    <section class="free wrap" aria-labelledby="free-title">
+      <img class="free-voidy" src="img/look-blackhole.webp" alt="" width="300" height="229" loading="lazy">
+      <h2 id="free-title">Free, and it stays free</h2>
+      <p class="sub">There is no paid tier and nothing locked. Voidy is made by one person, and the code is open for anyone to read.</p>
+      <div class="cta">
+        <a class="button primary" href="https://github.com/FrozenCodeZ/Voidy-Adblocker#install-from-source">Add Voidy to Chrome</a>
+        <a class="button" href="https://buymeacoffee.com/FrozenCodeZ">Buy me a coffee</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Voidy 1.0.0 is open source under GPL-3.0. Block lists by EasyList, HaGeZi and URLhaus.</p>
+    <nav aria-label="Footer">
+      <a href="https://github.com/FrozenCodeZ/Voidy-Adblocker">GitHub</a>
+      <a href="https://github.com/FrozenCodeZ/Voidy-Adblocker/blob/main/PRIVACY.md">Privacy policy</a>
+      <a href="https://github.com/FrozenCodeZ/Voidy-Adblocker/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/FrozenCodeZ/Voidy-Adblocker/issues">Report a problem</a>
+    </nav>
+  </footer>
+  <script src="site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+{
+  "manifest_version": 3,
+  "name": "Voidy",
+  "version": "1.0.0",
+  "description": "A cute little black hole that eats ads, trackers, pop-ups and malicious sites. Free forever, with a stealth mode.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "storage",
+    "webRequest",
+    "alarms",
+    "scripting",
+    "contextMenus",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "optional_permissions": [
+    "privacy"
+  ],
+  "action": {
+    "default_title": "Voidy",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "options_page": "options/options.html",
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ads",
+        "enabled": true,
+        "path": "rules/ads.json"
+      },
+      {
+        "id": "privacy",
+        "enabled": true,
+        "path": "rules/privacy.json"
+      },
+      {
+        "id": "security",
+        "enabled": true,
+        "path": "rules/security.json"
+      }
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*",
+        "*://*.youtube-nocookie.com/*",
+        "*://*.youtubekids.com/*"
+      ],
+      "js": [
+        "src/yt-startup.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/guard-main.js",
+        "src/stealth-main.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN",
+      "match_origin_as_fallback": true
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/config-bridge.js",
+        "src/procedural.js",
+        "src/annoyances.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_origin_as_fallback": true
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/detector.js",
+        "src/cosmetic.js",
+        "src/shield.js"
+      ],
+      "run_at": "document_end",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "surrogates/*",
+        "guard/guard-frame.html",
+        "guard/blocked.html"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "use_dynamic_url": true
+    }
+  ],
+  "minimum_chrome_version": "122",
+  "homepage_url": "https://github.com/FrozenCodeZ/Voidy-Adblocker"
+}

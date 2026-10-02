@@ -1,0 +1,87 @@
+<!doctype html>
+<html data-theme="void">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="../lib/theme.css">
+  <script src="../lib/theme.js"></script>
+  <style>
+    :root { --bg:#1b1f29; --card:#232835; --ink:#eef0f5; --ink2:#a9afbd; --ink3:#747b8c; --line:rgba(255,255,255,.08);
+            --blue:#4d7fe0; --good:#3ecf8e; --warn:#e0a31c; --bad:#e8566f; }
+    html, body { margin: 0; background: #1b1f29; border-radius: 12px; overflow: hidden; }
+    body { font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+    .box { --risk: var(--warn); background: radial-gradient(120% 60% at 0% 0%, color-mix(in srgb, var(--risk) 16%, transparent), transparent 60%), var(--bg);
+           border: 1px solid color-mix(in srgb, var(--risk) 35%, transparent); border-radius: 12px; padding: 0 16px 12px; overflow: hidden; }
+    .box[data-risk="good"] { --risk: var(--good); } .box[data-risk="bad"] { --risk: var(--bad); }
+    .strip { height: 4px; margin: 0 -16px 12px; background: linear-gradient(90deg, var(--risk), color-mix(in srgb, var(--risk) 40%, var(--a1))); }
+    .verdict { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+               color: var(--risk); background: color-mix(in srgb, var(--risk) 14%, transparent); border: 1px solid color-mix(in srgb, var(--risk) 30%, transparent); }
+    .verdict::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--risk); box-shadow: 0 0 8px var(--risk); }
+    .head { display: flex; gap: 10px; align-items: flex-start; }
+    .icon { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--risk); color: #10131a; box-shadow: 0 4px 14px color-mix(in srgb, var(--risk) 45%, transparent);
+            display: grid; place-items: center; font-weight: 800; font-size: 15px; }
+    .title { font-weight: 700; font-size: 14px; margin: 1px 0 2px; }
+    .why { color: var(--ink2); font-size: 12px; }
+    .dest { margin: 12px 0 8px; background: var(--card); border-radius: 9px; padding: 9px 11px; border-left: 3px solid var(--a1); }
+    .label { color: var(--ink3); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+    .site { font-size: 16px; font-weight: 700; word-break: break-all; margin-top: 1px; }
+    .site .sub { color: var(--ink2); font-weight: 500; }
+    .url { font: 11.5px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--ink2); word-break: break-all;
+           margin-top: 5px; max-height: 3.1em; overflow: hidden; }
+    .url.open { max-height: none; }
+    .urlrow { display: flex; gap: 10px; margin-top: 4px; }
+    .link { background: none; border: 0; color: var(--a1); font: inherit; font-size: 11.5px; padding: 0; cursor: pointer; }
+    .from { color: var(--ink3); font-size: 11.5px; margin-top: 6px; }
+    .from b { color: var(--ink2); font-weight: 600; }
+    .signals { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 5px; }
+    .signals li { display: flex; gap: 7px; font-size: 12px; color: var(--ink2); }
+    .dot { flex: none; width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; }
+    .good .dot { background: var(--good); } .warn .dot { background: var(--warn); } .bad .dot { background: var(--bad); }
+    .bad { color: #f3a3b1 !important; }
+    .covered { margin: 0 0 10px; font-size: 11.5px; color: var(--warn); }
+    .trust { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink2); margin-bottom: 10px; }
+    .row { display: flex; gap: 8px; }
+    button.b { flex: 1; font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px; padding: 8px 10px; }
+    .stay { background: linear-gradient(135deg, var(--a1), var(--a2)); color: #fff; border: 0; box-shadow: 0 4px 14px var(--a-glow); }
+    .stay:hover { filter: brightness(1.1); }
+    .trust input { accent-color: var(--a1); }
+    .go { background: transparent; color: var(--ink); border: 1px solid rgba(255,255,255,.18); }
+    .go:hover { border-color: rgba(255,255,255,.35); }
+    .hint { color: var(--ink3); font-size: 11px; margin-top: 7px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="box" id="box">
+    <div class="strip" aria-hidden="true"></div>
+    <div class="head">
+      <div class="icon" aria-hidden="true">!</div>
+      <div>
+        <div class="title" id="title">This page tried to send you somewhere else</div>
+        <div class="why" id="why">You didn't click a link. The page's own code tried to do this.</div>
+        <div class="verdict" id="verdict" hidden></div>
+      </div>
+    </div>
+
+    <div class="dest">
+      <div class="label">Going to</div>
+      <div class="site" id="site">—</div>
+      <div class="url" id="url"></div>
+      <div class="urlrow">
+        <button class="link" id="more" hidden>Show full address</button>
+        <button class="link" id="copy">Copy address</button>
+      </div>
+      <div class="from" id="from"></div>
+    </div>
+
+    <ul class="signals" id="signals"></ul>
+
+    <label class="trust" id="trustrow"><input type="checkbox" id="trust"> <span id="trustlabel">Always allow this site → that site</span></label>
+    <div class="row">
+      <button class="b stay" id="stay" autofocus>Stay here</button>
+      <button class="b go" id="allow">Go there</button>
+    </div>
+    <div class="hint" id="hint">Not sure? Stay. Nothing happens unless you choose "Go there".</div>
+  </div>
+  <script src="../lib/psl.js"></script>
+  <script src="guard-frame.js"></script>
+</body>
+</html>

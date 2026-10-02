@@ -1,0 +1,61 @@
+/* Popup-only Voidy pieces: header logo, hero, Customize panel, donate button.
+   The mascot itself is styled in lib/voidy.css. */
+.top .voidy.mini { margin: 0; width: 30px; height: 28px; flex: none; }
+.top .brand { background: linear-gradient(90deg, var(--ink), color-mix(in srgb, var(--a1) 70%, var(--ink)));
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.hero { position: relative; margin: -8px 0 6px; text-align: center; }
+.hero::before { content: ""; position: absolute; left: 50%; top: 8px; width: 230px; height: 150px; margin-left: -115px; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--a1) 22%, transparent), transparent); filter: blur(6px); }
+.voidy-says { position: relative; margin: 2px 12px 0; min-height: 18px; font-size: 12.5px; font-weight: 650; color: var(--ink); }
+.voidy-says b { color: var(--a1); }
+
+/* round buttons floating beside Voidy */
+.hero-btn { position: absolute; top: 6px; z-index: 2; width: 28px; height: 28px; padding: 5px; border-radius: 50%; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--a1) 25%, var(--line)); background: color-mix(in srgb, var(--card) 70%, transparent);
+  color: var(--ink-2); backdrop-filter: blur(8px); transition: color .15s, border-color .15s, transform .2s; }
+.hero-btn:hover:not(:disabled) { color: var(--ink); transform: rotate(-12deg) scale(1.06); }
+.hero-btn svg { width: 100%; height: 100%; }
+.v-motion { right: 2px; }
+.v-style { left: 2px; }
+.v-motion[aria-pressed="true"], .v-style[aria-expanded="true"] { color: var(--a1); border-color: color-mix(in srgb, var(--a1) 55%, transparent); }
+.v-motion:disabled { opacity: .4; cursor: default; }
+
+/* Customize panel: universe + accessory pickers */
+.style-panel { margin: 4px 0 10px; padding: 11px; border-radius: 16px; text-align: left; animation: v-open .25s ease; }
+@keyframes v-open { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+.style-panel h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 7px; font-size: 11px; font-weight: 700;
+  color: var(--ink-2); text-transform: uppercase; letter-spacing: .06em; }
+.style-panel h4 i { width: 14px; height: 14px; color: var(--a1); }
+.chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.chips + h4 { margin-top: 11px; }
+.chip { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 5px; border-radius: 11px; cursor: pointer;
+  border: 1px solid var(--line); background: color-mix(in srgb, var(--card-2) 50%, transparent); color: var(--ink-2); font-size: 10px; font-weight: 600;
+  transition: transform .15s, border-color .15s, color .15s; }
+.chip:hover { transform: translateY(-2px); color: var(--ink); }
+.chip.on { border-color: var(--a1); color: var(--ink); box-shadow: 0 0 0 1px var(--a1), 0 4px 14px -4px var(--a-glow); }
+.orb { width: 24px; height: 24px; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 36% 30%, var(--hole-1), var(--hole-2) 55%, var(--hole-3));
+  box-shadow: 0 0 0 1.5px var(--a1), 0 0 10px var(--a-glow); }
+.orb::after { content: ""; position: absolute; left: -5px; right: -5px; top: 10px; height: 4px; border-radius: 50%;
+  background: linear-gradient(90deg, var(--a1), var(--a2)); transform: rotate(-12deg); }
+.chip .acc-ico { width: 22px; height: 22px; font-size: 16px; line-height: 22px; text-align: center; }
+.chip .acc-ico svg { width: 100%; height: 100%; }
+
+.donate { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; padding: 9px 0; border-radius: 12px;
+  text-decoration: none; font-size: 12px; font-weight: 700; color: var(--ink);
+  border: 1px dashed color-mix(in srgb, var(--a1) 45%, transparent); background: var(--a-soft); transition: transform .15s, background .15s; }
+.donate i { width: 16px; height: 16px; color: var(--a1); }
+.donate:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--a1) 22%, transparent); }
+.donate:hover i { animation: v-steam .6s ease-in-out infinite alternate; }
+@keyframes v-steam { to { transform: translateY(-2px) rotate(-6deg); } }
+/* each universe chip wears its own theme, so show it on its own background */
+.chip[data-theme] { background: radial-gradient(90% 80% at 50% 0%, var(--neb1), transparent 75%), var(--bg); color: var(--ink); }
+.form-chips { grid-template-columns: repeat(3, 1fr); }
+.form-chip .voidy.mini { --vs: 44px; height: 40px; }
+/* background chips preview the page colours, not Voidy */
+.chip[data-theme] .orb { background: radial-gradient(circle at 30% 30%, var(--a1), transparent 60%), radial-gradient(circle at 70% 70%, var(--a2), transparent 60%), var(--bg);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--a1) 60%, transparent); }
+.chip[data-theme] .orb::after { content: none; }
+/* the black hole's disk is wider than Voidy's box: keep small previews inside their boxes */
+.form-chip, .top .voidy.mini { overflow: hidden; }

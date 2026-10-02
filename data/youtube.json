@@ -1,0 +1,12 @@
+{
+ "_about": "YouTube details Voidy can refresh without a new release (values only, never code). Read by src/yt-main.js; refreshed by src/list-updates.js.",
+ "version": 1,
+ "playerParams": "8AUB",
+ "freshActivityTime": true,
+ "quickReload": true,
+ "adKeys": [
+  "adPlacements",
+  "adSlots",
+  "playerAds"
+ ]
+}

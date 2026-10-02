@@ -1,0 +1,64 @@
+/* Background universes: page colours and Voidy's glow/disk accent. Voidy's
+   body is chosen separately (its "form", lib/voidy-mascot.js).
+   Written as [data-theme] (not html-only) so a preview card can wear a theme. */
+:root, [data-theme="void"] {
+  --a1:#9b74ff; --a2:#ec6eb4; --a-glow:rgba(155,116,255,.38); --a-soft:rgba(155,116,255,.14);
+  --bg:#0b0818; --side:#100b20; --card:#1b1430; --card-2:#281e42;
+  --ink:#f1eefb; --ink-2:#b4abcc; --ink-3:#7c7396; --line:rgba(255,255,255,.08);
+  --neb1:rgba(124,92,255,.38); --neb2:rgba(236,110,180,.22); --star:#ffffff;
+  --hole-1:#3a2766; --hole-2:#120b24; --hole-3:#030106;
+  --eye:#ffffff; --pupil:#140c26; --face:#ffffff; --blush:#ff7eb6; --acc:#ffd166;
+  --c-ads:#a783ff; --c-trk:#ffc267; --c-mal:#ff718d; --c-hid:#63b9ff;
+}
+[data-theme="whitehole"] {
+  --a1:#f0a52a; --a2:#7b8cff; --a-glow:rgba(240,165,42,.35); --a-soft:rgba(240,165,42,.14);
+  --bg:#f5f2fb; --side:#efeaf8; --card:#ffffff; --card-2:#ece6f7;
+  --ink:#1f1934; --ink-2:#4f4868; --ink-3:#877f9f; --line:rgba(50,30,110,.12);
+  --neb1:rgba(255,190,100,.45); --neb2:rgba(123,140,255,.32); --star:#8f7dff;
+  --c-ads:#8a63f0; --c-trk:#e5941a; --c-mal:#e0456a; --c-hid:#3a8ef0;
+  color-scheme: light;
+}
+[data-theme="nebula"] {
+  --a1:#ff6ad5; --a2:#4fd8e8; --a-glow:rgba(255,106,213,.36); --a-soft:rgba(255,106,213,.13);
+  --bg:#120a1f; --side:#170d27; --card:#241436; --card-2:#321d4a;
+  --ink:#fbeefa; --ink-2:#c8aecd; --ink-3:#8c7596; --line:rgba(255,255,255,.08);
+  --neb1:rgba(255,106,213,.36); --neb2:rgba(79,216,232,.26); --star:#ffe8fb;
+  --c-ads:#ff8ade; --c-trk:#ffd07a; --c-mal:#ff6f93; --c-hid:#5fdcef;
+}
+[data-theme="supernova"] {
+  --a1:#ff8a3d; --a2:#ffd166; --a-glow:rgba(255,138,61,.38); --a-soft:rgba(255,138,61,.14);
+  --bg:#150a07; --side:#1b0e0a; --card:#2a1711; --card-2:#3b2118;
+  --ink:#fff2e8; --ink-2:#d5b7a6; --ink-3:#9a7a6b; --line:rgba(255,255,255,.08);
+  --neb1:rgba(255,120,50,.38); --neb2:rgba(255,209,102,.2); --star:#fff1d6;
+  --c-ads:#ff9564; --c-trk:#ffcc69; --c-mal:#fa6386; --c-hid:#9d96f4;
+}
+[data-theme="pulsar"] {
+  --a1:#4fc3ff; --a2:#8a7dff; --a-glow:rgba(79,195,255,.36); --a-soft:rgba(79,195,255,.13);
+  --bg:#060c1b; --side:#0a1224; --card:#101c35; --card-2:#172848;
+  --ink:#eaf6ff; --ink-2:#a6bfd6; --ink-3:#6a8199; --line:rgba(255,255,255,.08);
+  --neb1:rgba(79,195,255,.32); --neb2:rgba(138,125,255,.24); --star:#e6f6ff;
+  --c-ads:#59cce8; --c-trk:#ffc56b; --c-mal:#ff857f; --c-hid:#9c8cff;
+}
+[data-theme="aurora"] {
+  --a1:#5ef0b0; --a2:#4fb8ff; --a-glow:rgba(94,240,176,.33); --a-soft:rgba(94,240,176,.12);
+  --bg:#05130f; --side:#081a15; --card:#0f2a22; --card-2:#163a2f;
+  --ink:#eafff6; --ink-2:#a3cbbb; --ink-3:#6b9283; --line:rgba(255,255,255,.08);
+  --neb1:rgba(94,240,176,.3); --neb2:rgba(79,184,255,.24); --star:#eafff6;
+  --c-ads:#6ce1b3; --c-trk:#f4c976; --c-mal:#ff7b85; --c-hid:#65c8f1;
+}
+[data-theme="eclipse"] {
+  --a1:#f3ecd9; --a2:#c9a45c; --a-glow:rgba(243,236,217,.25); --a-soft:rgba(243,236,217,.08);
+  --bg:#050505; --side:#0a0a0a; --card:#131313; --card-2:#1f1f1f;
+  --ink:#f5f2ea; --ink-2:#b3ada0; --ink-3:#77726a; --line:rgba(255,255,255,.09);
+  --neb1:rgba(243,236,217,.14); --neb2:rgba(201,164,92,.12); --star:#f5f2ea;
+  --c-ads:#e8dcc0; --c-trk:#c9a45c; --c-mal:#e0707a; --c-hid:#9fb2c8;
+}
+[data-theme="custom"] {
+  --a1:var(--custom-a1,#9b74ff); --a2:var(--custom-a2,#ec6eb4);
+  --a-glow:color-mix(in srgb,var(--a1) 38%,transparent); --a-soft:color-mix(in srgb,var(--a1) 14%,transparent);
+  --neb1:color-mix(in srgb,var(--a1) 35%,transparent); --neb2:color-mix(in srgb,var(--a2) 22%,transparent);
+  --c-ads:var(--a1); --c-trk:var(--a2);
+}
+:root {
+  --c-wid: #3ecf8e; --c-red: #2fc6e0; --c-ghost: #c46cff; --c-gold: #ffc53d;
+}

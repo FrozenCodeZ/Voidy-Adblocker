@@ -1,0 +1,462 @@
+<!doctype html>
+<html data-theme="void">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voidy Dashboard</title>
+  <link rel="stylesheet" href="../lib/theme.css">
+  <link rel="stylesheet" href="options.css">
+  <link rel="stylesheet" href="../lib/voidy.css">
+  <link rel="stylesheet" href="../lib/privacy-controls.css">
+  <script src="../lib/theme.js"></script>
+</head>
+<body class="cosmos dash">
+<div class="app">
+  <!-- ===================================================== sidebar -->
+  <aside class="side">
+    <div class="brand"><div class="mark voidy-mark" id="side-voidy" aria-hidden="true"></div><div><b>Voidy</b><small id="build-version"></small></div></div>
+    <nav id="nav">
+      <button data-tab="dash" class="on" style="--c:var(--a1)"><i data-ico="telescope"></i>Dashboard</button>
+      <button data-tab="guide" style="--c:var(--c-gold)"><i data-ico="rocket"></i>Start here</button>
+      <div class="nav-h">Blocking</div>
+      <button data-tab="filters" style="--c:var(--c-hid)"><i data-ico="filter"></i>Filter lists</button>
+      <button data-tab="annoy" style="--c:var(--c-wid)"><i data-ico="comet"></i>Pop-ups &amp; widgets</button>
+      <button data-tab="sites" style="--c:var(--c-trk)"><i data-ico="orbit"></i>Sites</button>
+      <div class="nav-h">Protection</div>
+      <button data-tab="privacy" style="--c:var(--c-trk)"><i data-ico="fingerprint"></i>Advanced privacy</button>
+      <button data-tab="stealth" style="--c:var(--c-ghost)"><i data-ico="mask"></i>Stealth</button>
+      <button data-tab="guard" style="--c:var(--c-red)"><i data-ico="wormhole"></i>Redirect Guard</button>
+      <button data-tab="safety" style="--c:var(--c-mal)"><i data-ico="lock"></i>Sensitive pages</button>
+      <div class="nav-h">You</div>
+      <button data-tab="look" style="--c:#ff7ab8"><i data-ico="sparkle"></i>Appearance</button>
+      <button data-tab="logs" style="--c:#8fa3c7"><i data-ico="list"></i>Activity log</button>
+      <button data-tab="backup" style="--c:#5fd1c4"><i data-ico="box"></i>Backup &amp; reset</button>
+    </nav>
+  </aside>
+
+  <main>
+  <section class="panel" data-panel="privacy">
+    <header class="ph"><h1>Advanced privacy</h1><p>Choose what websites can read about your browser. Stronger settings can break parts of some sites, and each one says what it affects.</p></header>
+    <div class="tgl-list">
+      <label class="tgl" style="--c:var(--c-trk)"><i data-ico="lock"></i><div><b>Tell sites not to sell or share my data (Global Privacy Control)</b><span>Sends the standard Global Privacy Control signal with every request and to every page. Under laws like California's it is a legal opt-out of selling or sharing your data; elsewhere it is a polite request. It is not sent on sites set to Off, and it never blocks anything.</span></div><span class="sw"><input type="checkbox" id="x-gpc"><span></span></span></label>
+    </div>
+    <form id="privacy-site-form" class="card"><label for="privacy-site">Website</label><input id="privacy-site" type="text" placeholder="example.com" aria-describedby="privacy-site-help"><button class="btn" type="submit">Load site settings</button><p id="privacy-site-help">Enter a domain or website URL. These settings apply to this site and its subdomains. Reload matching tabs after a change.</p></form>
+    <div class="card" id="privacy-panel"></div>
+  </section>
+  <!-- ===================================================== DASHBOARD -->
+  <section class="panel on" data-panel="dash">
+    <header class="ph"><h1>Your dashboard</h1><p>Everything Voidy has stopped on this computer<span id="since"></span>.</p></header>
+
+    <div class="dash-main">
+    <div class="hero">
+      <div class="hero-num"><div id="dash-voidy" aria-hidden="true"></div><span id="d-total">0</span><small>things eaten by Voidy</small></div>
+      <div class="stat-grid">
+        <div class="stat" style="--c:var(--c-ads)"><i data-ico="ad"></i><b id="d-ads">0</b><span>Ads</span></div>
+        <div class="stat" style="--c:var(--c-trk)"><i data-ico="eye"></i><b id="d-privacy">0</b><span>Trackers</span></div>
+        <div class="stat" style="--c:var(--c-mal)"><i data-ico="bug"></i><b id="d-security">0</b><span>Malicious</span></div>
+        <div class="stat" style="--c:var(--c-wid)"><i data-ico="comet"></i><b id="d-annoy">0</b><span>Pop-ups &amp; widgets</span></div>
+        <div class="stat" style="--c:var(--c-hid)"><i data-ico="hide"></i><b id="d-hidden">0</b><span>Ad boxes hidden</span></div>
+        <div class="stat" style="--c:var(--c-red)"><i data-ico="wormhole"></i><b id="d-held">0</b><span>Redirects held</span></div>
+        <div class="stat" style="--c:var(--c-ghost)"><i data-ico="shades"></i><b id="d-climbs">0</b><span>Walls dodged</span></div>
+        <div class="stat" style="--c:var(--c-gold)"><i data-ico="org"></i><b id="d-orgs">0</b><span>Companies stopped</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Who got blocked, by category</h3>
+        <div class="donut-row">
+          <svg class="donut" viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="50"></circle><g id="d-segs"></g></svg>
+          <ul class="legend" id="d-legend"></ul>
+        </div>
+        <p class="empty" id="d-empty" hidden>Nothing blocked yet. Browse a little and come back.</p>
+      </div>
+      <div class="card">
+        <h3>Top companies</h3>
+        <ul class="bars" id="d-bars"></ul>
+        <p class="hint">Voidy names the companies it knows. Anything else shows the blocked address.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>Milestones</h3><span class="pill" id="m-count">0 / 10</span></div>
+      <div class="badges" id="badges"></div>
+    </div>
+    </div>
+
+    <aside class="dash-side">
+      <div class="card side-card">
+        <div class="card-h"><h3><i data-ico="shield"></i>Protection check</h3><span class="pill" id="pc-score"></span></div>
+        <ul class="pcheck" id="pcheck"></ul>
+      </div>
+      <div class="card side-card">
+        <div class="card-h"><h3><i data-ico="list"></i>Recent activity</h3><a class="side-link" href="#logs">See all</a></div>
+        <ul class="mini-log" id="mini-log"></ul>
+        <p class="hint" id="mini-log-empty" hidden>Nothing yet. Voidy writes here when it warns you about a site, goes stealthier, or you change something.</p>
+      </div>
+      <div class="card side-card private-card">
+        <h3><i data-ico="lock"></i>Stays on your computer</h3>
+        <ul class="facts">
+          <li>Blocking happens inside Chrome, using rules stored on your computer.</li>
+          <li>Voidy has no account, no servers and no analytics. Your browsing is never sent anywhere.</li>
+          <li>Look-alike and dangerous-site checks run locally.</li>
+          <li>The only downloads are public block lists, and those carry nothing about you.</li>
+        </ul>
+      </div>
+      <div class="card side-card tip-card">
+        <div class="card-h"><h3><i data-ico="sparkle"></i>Did you know?</h3><button class="side-link" id="tip-next" type="button">Next tip</button></div>
+        <p id="tip"></p>
+      </div>
+    </aside>
+
+    <div class="row-end"><button class="btn ghost" id="reset-stats">Reset statistics</button></div>
+  </section>
+
+  <!-- ===================================================== GUIDE -->
+  <section class="panel" data-panel="guide">
+    <header class="ph"><h1>Start here</h1><p>New to ad blockers? Five minutes here and you'll know what every switch does.</p></header>
+
+    <div class="short"><b>First, pin Voidy:</b> click the puzzle-piece icon in Chrome's toolbar, then the pin next to Voidy, so it's always one click away. <b>See an ad that got through?</b> Right-click it and choose <b>Hide this with Voidy</b>.</div>
+    <div class="guide-cards">
+      <div class="gc" style="--c:var(--c-ads)"><i data-ico="ad"></i><b>It blocks</b><p>Ads, trackers and known malware sites are stopped <i>before they download</i>. Pages load faster and fewer companies see you.</p></div>
+      <div class="gc" style="--c:var(--c-wid)"><i data-ico="bell"></i><b>It tidies</b><p>Cookie banners (it clicks "Reject" for you), newsletter pop-ups, chat bubbles and "allow notifications?" nags disappear.</p></div>
+      <div class="gc" style="--c:var(--c-red)"><i data-ico="route"></i><b>It guards</b><p>If a page tries to throw you to another site or open a pop-up by itself, you get asked first.</p></div>
+      <div class="gc" style="--c:var(--c-ghost)"><i data-ico="ghost"></i><b>Adapts when needed</b><p>Auto starts in Full and steps up to Stealth when a site keeps showing an ad-block wall. Some sites can still tell.</p></div>
+    </div>
+
+    <div class="card">
+      <h3>The one control you need: the mode</h3>
+      <p class="lead">Click the toolbar icon on any site. The four buttons change how hard Voidy works <i>on that site only</i>.</p>
+      <div class="ladder">
+        <div class="rung" style="--c:#8c93a6"><b>Off</b><span>Nothing blocked. Use if a site you trust is broken.</span></div>
+        <div class="rung" style="--c:#2fc6e0"><b>Lite</b><span>Blocks ads &amp; trackers at the network only. Gentlest.</span></div>
+        <div class="rung" style="--c:var(--c-hid)"><b>Full</b><span>Everything in Lite, plus it hides empty ad boxes, pop-ups and surprise redirects.</span></div>
+        <div class="rung" style="--c:var(--a1)"><b>Auto</b><span>Starts in Full and adds stealth when a wall persists. <em>Recommended.</em></span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>If a site breaks</h3>
+        <ol class="steps">
+          <li>Click the toolbar icon, then <b>Site looks broken? Ease off here</b>. It steps down one level and reloads.</li>
+          <li>Still broken? Click it again, or pick <b>Lite</b>.</li>
+          <li>Only the <i>pop-ups</i> are the problem (say, you need the site's chat)? Untick <b>Hide pop-ups &amp; widgets on this site</b>.</li>
+          <li>Last resort: <b>Off</b> for that site. Everything else stays protected.</li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>"Please disable your ad blocker"</h3>
+        <ol class="steps">
+          <li>In Auto, just wait a second. Voidy usually notices and reloads once or twice in stealth.</li>
+          <li>If the wall stays, the popup shows <b>"This site keeps detecting the blocker"</b> with choices.</li>
+          <li><b>Max stealth</b> also fools common detector scripts.</li>
+          <li>Some walls can't be fooled. Then "Accept the wall" or reading the story somewhere else is the answer.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>The "Go there?" box</h3>
+      <p class="lead">It appears when a page tries to move you <i>without you clicking a link</i>. It shows where you'd go, the full address and any warning signs. Green means no red flags were found, amber means be careful, and red means it's likely a trick. Not sure? Press <b>Stay here</b>. Nothing happens unless you choose to go.</p>
+    </div>
+
+    <div class="card">
+      <h3>Words you'll see</h3>
+      <dl class="gloss">
+        <dt>Tracker</dt><dd>A script that records what you do and reports it to a company, often across many sites.</dd>
+        <dt>Filter list</dt><dd>A public list of known ad/tracker addresses, maintained by volunteers (EasyList, EasyPrivacy…).</dd>
+        <dt>Cosmetic filtering</dt><dd>Hiding the empty boxes an ad would have filled, so the page doesn't have holes.</dd>
+        <dt>Anti-adblock wall</dt><dd>A page that hides its content until you turn your ad blocker off.</dd>
+        <dt>Surrogate / fake</dt><dd>A harmless stand-in file we give the page instead of the real ad script, so it thinks ads loaded.</dd>
+        <dt>Stealth level</dt><dd>How much disguising Auto is doing on a site, from 1 to 3. Blocking is the same at every level.</dd>
+        <dt>Sensitive page</dt><dd>Banks, payment providers and sign-in services, plus sites you add. Stealth tricks and redirect prompts stand aside there so nothing breaks.</dd>
+      </dl>
+    </div>
+
+    <div class="card">
+      <h3>Try it yourself</h3>
+      <ul class="checks">
+        <li><b>Ad-blocker test:</b> open <code>adblock.turtlecute.org</code> and run it. Turn on "Phone &amp; device telemetry" in Filter lists for the highest score.</li>
+        <li><b>Stealth:</b> visit a site that normally says "disable your ad blocker", then open <i>Activity log</i> here to see Auto's steps in plain words.</li>
+        <li><b>Counts:</b> the popup's <i>All time</i> view and this dashboard should grow as you browse.</li>
+      </ul>
+      <p class="hint">Honest limits: YouTube changes often, so an ad can occasionally slip through. No blocker catches everything.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== FILTERS -->
+  <section class="panel" data-panel="filters">
+    <header class="ph"><h1>Filter lists</h1><p>Whole categories of blocking. Each list is a public, volunteer-maintained set of addresses.</p></header>
+    <div class="short"><b>In short:</b> leave the first three on. Turn on telemetry only if you want a higher test score.</div>
+    <div class="tgl-list">
+      <label class="tgl" style="--c:var(--c-ads)"><i data-ico="ad"></i><div><b>Ads</b><span>EasyList (ad servers, ad addresses and pop-unders), HaGeZi Pop-Up Ads, and a short list Voidy maintains. It also blocks Google's "ad blocker detected" message service (Funding Choices), whatever the cookie-banner switch says.</span><em class="cnt" id="n-ads"></em></div><span class="sw"><input type="checkbox" id="f-ads"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-trk)"><i data-ico="eye"></i><div><b>Trackers</b><span>EasyPrivacy + HaGeZi Multi PRO + a small curated core. Stops analytics and cross-site profiling.</span><em class="cnt" id="n-privacy"></em></div><span class="sw"><input type="checkbox" id="f-privacy"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-mal)"><i data-ico="bug"></i><div><b>Malicious sites</b><span>HaGeZi Threat Intelligence Feeds and URLhaus: malware, phishing, scam and fake-shop sites. Visiting one shows a warning page first.</span><em class="cnt" id="n-security"></em></div><span class="sw"><input type="checkbox" id="f-security"><span></span></span></label>
+      <label class="tgl" style="--c:#8fa3c7"><i data-ico="phone"></i><div><b>Phone &amp; device telemetry</b><span>A small, locally maintained set of device telemetry domains. Off by default.</span><em class="cnt" id="n-telemetry"></em></div><span class="sw"><input type="checkbox" id="f-telemetry"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-hid)"><i data-ico="hide"></i><div><b>Hide leftover ad boxes</b><span>Uses EasyList's hiding rules, in Full mode only. Stealth leaves these boxes alone because detectors measure them.</span><em class="cnt" id="n-cos"></em></div><span class="sw"><input type="checkbox" id="a-adscos"><span></span></span></label>
+    </div>
+    <div class="card">
+      <h3>What's loaded right now</h3>
+      <div class="kv" id="listinfo"></div>
+    </div>
+    <div class="card">
+      <h3><i data-ico="hide"></i>Elements you hid</h3>
+      <p class="hint">Things you hid with <b>Hide an ad on this page</b> in the popup. They stay hidden on that site in every mode except Off.</p>
+      <div id="myhides"></div>
+    </div>
+    <div class="card">
+      <h3><i data-ico="clock"></i>Keep lists up to date</h3>
+      <div class="tgl-list">
+        <label class="tgl" style="--c:var(--a1)"><i data-ico="clock"></i><div><b>Update block lists automatically</b><span>Downloads the latest domain lists from EasyList and HaGeZi: the malicious-site list daily, ads and trackers every 4 days. Only lists of addresses are downloaded, never code, and nothing about you is sent.</span></div><span class="sw"><input type="checkbox" id="x-listauto"><span></span></span></label>
+      </div>
+      <div class="kv" id="listupd"></div>
+      <p class="hint"><button class="ghost" id="list-update-now" type="button">Update now</button> <span id="list-update-msg" role="status"></span></p>
+    </div>
+  </section>
+
+  <!-- ===================================================== ANNOY -->
+  <section class="panel" data-panel="annoy">
+    <header class="ph"><h1>Pop-ups &amp; widgets</h1><p>The things sites throw at you. Works in every mode except Lite and Off.</p></header>
+    <div class="short"><b>In short:</b> defaults are sensible. If you <i>need</i> a site's chat or pop-ups, switch widgets off for that site from the toolbar popup.</div>
+    <div class="tgl-list">
+      <label class="tgl" style="--c:var(--c-gold)"><i data-ico="cookie"></i><div><b>Cookie &amp; consent banners</b><span>EasyList Cookie list plus known consent platforms.</span></div><span class="sw"><input type="checkbox" id="a-cookies"><span></span></span></label>
+      <label class="tgl sub" id="cookie-mode" style="--c:var(--c-gold)"><i data-ico="x"></i><div><b>Automatically click "Reject all"</b><span>Uses the site's own reject button so it remembers your "no". Never clicks accept. Off = just hide the banner.</span></div><span class="sw"><input type="checkbox" id="a-cookiereject"><span></span></span></label>
+      <label class="tgl" style="--c:#ff7ab8"><i data-ico="mail"></i><div><b>Newsletter &amp; sign-up pop-ups</b><span>"10% off, enter your email" boxes that appear without a click. Log-in boxes and things you opened are left alone.</span></div><span class="sw"><input type="checkbox" id="a-newsletter"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-red)"><i data-ico="bell"></i><div><b>Notification prompts</b><span>Sites may only ask "Allow notifications?" right after you click something.</span></div><span class="sw"><input type="checkbox" id="a-notifications"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-hid)"><i data-ico="chat"></i><div><b>Chat bubbles</b><span>Support/sales chat widgets in the corner.</span></div><span class="sw"><input type="checkbox" id="a-chat"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-wid)"><i data-ico="spark"></i><div><b>Other annoyances</b><span>"Open in app" banners, sticky bars, surveys, floating videos.</span></div><span class="sw"><input type="checkbox" id="a-annoyances"><span></span></span></label>
+      <label class="tgl" style="--c:#8fa3c7"><i data-ico="share"></i><div><b>Social widgets</b><span>Share bars and follow boxes. Off by default: can remove embedded posts.</span></div><span class="sw"><input type="checkbox" id="a-social"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-ghost)"><i data-ico="scroll"></i><div><b>Scroll rescue</b><span>After we remove a pop-up, un-freeze a page that is still locked or blurred.</span></div><span class="sw"><input type="checkbox" id="x-rescue"><span></span></span></label>
+    </div>
+    <div class="card">
+      <h3>Sites where pop-ups &amp; widgets are allowed</h3>
+      <ul class="chips" id="widgetoff"></ul>
+      <p class="empty" id="no-widgetoff">None yet. Every site gets the clean-up.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== SITES -->
+  <section class="panel" data-panel="sites">
+    <header class="ph"><h1>Sites</h1><p>Every site where you, or Auto, changed something. New sites use <b>Auto</b>.</p></header>
+    <div class="short"><b>In short:</b> the coloured meter shows how much stealth Auto is using. "Won't go above" means you eased off on that site.</div>
+    <div class="card">
+      <div class="addrow">
+        <input type="text" id="site-input" placeholder="example.com" spellcheck="false">
+        <select id="site-mode"></select>
+        <button class="btn" id="site-add">Add site</button>
+      </div>
+      <div class="sites" id="sites"></div>
+      <p class="empty" id="no-sites">No site-specific settings yet.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== STEALTH -->
+  <section class="panel" data-panel="stealth">
+    <header class="ph"><h1>Stealth</h1><p>How Voidy avoids "disable your ad blocker" walls <i>without</i> letting ads through.</p></header>
+    <div class="short"><b>In short:</b> stealth blocks just as much as Full. For the few ad files detectors watch, it hands the page a harmless fake instead of a missing file, so the detector thinks ads loaded.</div>
+
+    <div class="card">
+      <h3>The stealth ladder</h3>
+      <div class="sladder">
+        <div class="srung" style="--c:var(--c-hid)"><span class="lv">Full</span><p>Normal blocking. Detectors see ad files missing.</p></div>
+        <div class="srung" style="--c:#8f7dff"><span class="lv">Stealth 1</span><p>Watched ad scripts (Google Ads, Tag Manager, Analytics) are swapped for harmless fakes, whether the page loads them as a script or downloads them to check.</p></div>
+        <div class="srung" style="--c:var(--c-ghost)"><span class="lv">Stealth 2</span><p>Every test request to the big ad networks (images, downloads, beacons) gets an empty "200 OK" answer instead of an error.</p></div>
+        <div class="srung" style="--c:#ff5c93"><span class="lv">Stealth 3</span><p>Also replaces well-known detector libraries (FuckAdBlock, BlockAdBlock…) with ones that always say "no ad blocker". Switches off by itself on pages with password or card fields.</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Auto may climb up to</h3>
+      <div class="seg" id="automax">
+        <button data-v="full">Full <small>never disguise</small></button>
+        <button data-v="stealth1">Stealth 1</button>
+        <button data-v="stealth2">Stealth 2 <small>default</small></button>
+        <button data-v="stealth3">Stealth 3 <small>boldest</small></button>
+      </div>
+      <p class="hint" id="automax-hint"></p>
+      <div class="tgl-list flat">
+        <p class="hint">Auto only climbs when a blocking message persists. Loading a detector library alone does not change protection.</p><input type="checkbox" id="x-detectlibs" hidden disabled>
+        <label class="tgl" style="--c:var(--c-wid)"><i data-ico="down"></i><div><b>Gentle retry</b><span>After 30 quiet days at a stealth level, try one level lower. If the site notices, step back up and wait longer.</span></div><span class="sw"><input type="checkbox" id="gentle"><span></span></span></label>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Scripts swapped for fakes</h3>
+        <ul class="mono-list" id="surr"></ul>
+      </div>
+      <div class="card">
+        <h3>Networks that get a fake "OK"</h3>
+        <ul class="chips static" id="fakeok"></ul>
+        <p class="hint">At every stealth level the answer comes from inside Voidy. No request reaches the real ad server.</p>
+      </div>
+    </div>
+    <div class="note"><b>Limits:</b> no blocker is undetectable everywhere. A smarter check can catch any disguise, for example a server that confirms ads were really shown. Voidy aims to stay hidden on the sites you actually use, and gets better as sites change.</div>
+  </section>
+
+  <!-- ===================================================== GUARD -->
+  <section class="panel" data-panel="guard">
+    <header class="ph"><h1>Redirect Guard</h1><p>Holds pop-ups and redirects a page tries on its own. Your real link clicks are never interrupted.</p></header>
+    <div class="short"><b>In short:</b> if a site keeps asking about a place you trust, tick "Always allow" in the prompt. The settings below are for fine-tuning.</div>
+    <div class="tgl-list" id="g-master">
+      <label class="tgl" style="--c:var(--c-red)"><i data-ico="shield"></i><div><b>Use the Redirect Guard</b><span>Master switch for everything below. To turn it off for just one site, use the toolbar popup on that site.</span></div><span class="sw"><input type="checkbox" id="g-enabled"><span></span></span></label>
+    </div>
+    <div class="card">
+      <div class="field"><div><b>When it catches something</b><span>"Ask" shows the prompt. "Block quietly" never asks: the page just stays where it is (counted as a held redirect).</span></div>
+        <div class="seg small" id="g-action"><button data-v="ask">Ask me</button><button data-v="block">Block quietly</button></div></div>
+      <div class="field"><div><b>Pretend blocked pop-ups opened</b><span>Some sites open a pop-up only to test for a blocker, then punish a "blocked" result (e.g. by sending you to another site). A stand-in window makes the test pass; nothing opens. On a site that shows "pop-up was blocked, click here" you would lose that hint.</span></div>
+        <div class="seg small" id="g-fake"><button data-v="stealth" title="Only on sites set to Stealth 1-3">On Stealth</button><button data-v="always">Always</button><button data-v="never">Never</button></div></div>
+      <div class="field"><div><b>Prompt position</b><span>Where the "this page tried to…" box appears.</span></div>
+        <div class="seg small" id="g-pos"><button data-v="top-right">Top right</button><button data-v="bottom-right">Bottom right</button></div></div>
+      <div class="field"><div><b>Prompts per page</b><span>After this many, further attempts are blocked quietly.</span></div><div class="range"><input type="range" id="g-max" min="1" max="10"><output id="g-max-o"></output></div></div>
+      <div class="field"><div><b>Prompt waits</b><span>Seconds before the prompt closes itself. Closing counts as Stay.</span></div><div class="range"><input type="range" id="g-timeout" min="5" max="60" step="5"><output id="g-timeout-o"></output></div></div>
+      <div class="field"><div><b>Pop-ups right after you click</b><span>Pop-under ads open when you click anywhere, so "Ask" is safer. "Allow" trusts your click unless it goes to a known ad network.</span></div>
+        <div class="seg small" id="popclick"><button data-v="ask">Ask</button><button data-v="allow">Allow</button></div></div>
+    </div>
+    <div class="tgl-list">
+      <label class="tgl" style="--c:var(--c-red)"><i data-ico="layers"></i><div><b>Catch invisible link overlays</b><span>Stops a click on a see-through, page-covering link (a common ad trick).</span></div><span class="sw"><input type="checkbox" id="g-overlay"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-hid)"><i data-ico="clock"></i><div><b>Block "tab-under" tricks</b><span>For 2 seconds after a pop-up, the page itself can't redirect.</span></div><span class="sw"><input type="checkbox" id="g-tabunder"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-trk)"><i data-ico="app"></i><div><b>Ask before opening apps</b><span>Links like <code>zoommtg://</code> or <code>steam://</code> can launch programs.</span></div><span class="sw"><input type="checkbox" id="g-nonhttp"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-wid)"><i data-ico="route"></i><div><b>Catch pop-ups from hidden links</b><span>Pop-under scripts often click an invisible "open in new tab" link instead of opening a window directly.</span></div><span class="sw"><input type="checkbox" id="g-links"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-ads)"><i data-ico="ad"></i><div><b>Block ad-network jumps without asking</b><span>Redirects and pop-ups to known ad networks are never worth a prompt.</span></div><span class="sw"><input type="checkbox" id="g-quietads"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-mal)"><i data-ico="lock"></i><div><b>Warn before opening dangerous sites</b><span>Sites on the malware / phishing list stop at a warning page (Go back / Continue anyway) instead of loading. Needs the Malicious-sites filter on.</span></div><span class="sw"><input type="checkbox" id="g-malware"><span></span></span></label>
+      <label class="tgl" style="--c:var(--c-mal)"><i data-ico="ghost"></i><div><b>Warn about look-alike sites</b><span>Stops sites that pose as a well-known brand, like "paypa1.com" or "g00gle.com". Near-misses ("paypall.com") are only flagged when they ask for a password. Checked on your computer; no address is sent anywhere.</span></div><span class="sw"><input type="checkbox" id="g-lookalike"><span></span></span></label>
+      <label class="tgl" style="--c:#8fa3c7"><i data-ico="pause"></i><div><b>Wait for a site's first redirect</b><span>Only start guarding after one redirect. Less safe; off by default.</span></div><span class="sw"><input type="checkbox" id="g-afterfirst"><span></span></span></label>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Trusted jumps</h3>
+        <p class="hint">Saved when you tick "Always allow" in a prompt.</p>
+        <ul class="chips" id="pairs"></ul>
+        <p class="empty" id="no-pairs">None yet.</p>
+      </div>
+      <div class="card">
+        <h3>Sites where the Guard is off</h3>
+        <p class="hint">Set from the toolbar popup on that site.</p>
+        <ul class="chips" id="guardoff"></ul>
+        <p class="empty" id="no-guardoff">None.</p>
+      </div>
+      <div class="card">
+        <h3>Always-allowed destinations</h3>
+        <p class="hint">Added to the built-in sign-in &amp; payment list.</p>
+        <div class="addrow"><input type="text" id="safe-input" placeholder="example.com" spellcheck="false"><button class="btn" id="safe-add">Add</button></div>
+        <ul class="chips" id="safelist"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== SAFETY -->
+  <section class="panel" data-panel="safety">
+    <header class="ph"><h1>Sensitive pages</h1><p>Log-in, checkout and banking pages get special care so nothing important breaks.</p></header>
+    <div class="short"><b>In short:</b> on these pages stealth tricks stand aside and the Redirect Guard lets sign-in and card-check (3-D Secure) jumps through. Blocking of ads and malware stays on.</div>
+    <div class="card">
+      <h3>Detected automatically</h3>
+      <p class="lead">A built-in list of banks, payment providers and sign-in services (Google, Microsoft, Apple, PayPal, Stripe…). Payment frames (Stripe, PayPal, Adyen…) are never touched at all. Words like <code>login</code> or <code>pay</code> in an address don't count: any site can put those in its own address, so add your bank's or shop's site below if its sign-in or checkout jumps get held.</p>
+      <h3>Your own additions</h3>
+      <div class="addrow"><input type="text" id="sens-input" placeholder="mybank.com" spellcheck="false"><button class="btn" id="sens-add">Add</button></div>
+      <ul class="chips" id="senslist"></ul>
+      <p class="empty" id="no-sens">None added.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== APPEARANCE -->
+  <section class="panel" data-panel="look">
+    <header class="ph"><h1>Appearance</h1><p>Make Voidy yours: pick a universe, dress it up, and choose how lively it is.</p></header>
+    <div class="card">
+      <div class="look-top"><div id="look-voidy"></div><div><h3><i data-ico="galaxy"></i>Background</h3>
+        <p class="lead">The colours of the popup and this page. Voidy's own look is chosen below.</p></div></div>
+      <div class="swatches unis" id="swatches">
+        <button data-v="void" data-theme="void" class="uni"><span class="uni-sky"><i></i></span><b>Black hole</b><small>The classic. Deep violet void.</small></button>
+        <button data-v="whitehole" data-theme="whitehole" class="uni"><span class="uni-sky"><i></i></span><b>White hole</b><small>Light mode. A glowing, bright Voidy.</small></button>
+        <button data-v="nebula" data-theme="nebula" class="uni"><span class="uni-sky"><i></i></span><b>Nebula</b><small>Pink and teal star clouds.</small></button>
+        <button data-v="supernova" data-theme="supernova" class="uni"><span class="uni-sky"><i></i></span><b>Supernova</b><small>Hot orange, freshly exploded.</small></button>
+        <button data-v="pulsar" data-theme="pulsar" class="uni"><span class="uni-sky"><i></i></span><b>Pulsar</b><small>Icy blue, spinning fast.</small></button>
+        <button data-v="aurora" data-theme="aurora" class="uni"><span class="uni-sky"><i></i></span><b>Aurora</b><small>Green northern lights.</small></button>
+        <button data-v="eclipse" data-theme="eclipse" class="uni"><span class="uni-sky"><i></i></span><b>Eclipse</b><small>Pure black with a golden corona.</small></button>
+        <button data-v="custom" data-theme="custom" class="uni"><span class="uni-sky"><i></i></span><b>My colours</b><small>Pick two colours below.</small></button>
+      </div>
+      <div class="custom-colours"><label>First colour <input id="custom-primary" type="color" value="#9b74ff"></label><label>Second colour <input id="custom-secondary" type="color" value="#ec6eb4"></label><button class="btn" id="apply-colours" type="button">Apply my colours</button></div>
+    </div>
+    <div class="card">
+      <h3><i data-ico="hole"></i>Voidy's form</h3>
+      <p class="lead">What Voidy is made of. It keeps its face, moods and accessory in every form.</p>
+      <div class="swatches unis" id="form-seg">
+        <button data-v="blackhole" class="uni form-card"><span class="form-v" data-form-preview="blackhole"></span><b>Black hole</b><small>The original: bends light, spins a disk.</small></button>
+        <button data-v="whitehole" class="uni form-card"><span class="form-v" data-form-preview="whitehole"></span><b>White hole</b><small>Radiant and bright, gives light back.</small></button>
+        <button data-v="nebula" class="uni form-card"><span class="form-v" data-form-preview="nebula"></span><b>Nebula</b><small>A fluffy cloud of pink and teal gas.</small></button>
+        <button data-v="supernova" class="uni form-card"><span class="form-v" data-form-preview="supernova"></span><b>Supernova</b><small>A spiky, bursting star. Handle with care.</small></button>
+        <button data-v="pulsar" class="uni form-card"><span class="form-v" data-form-preview="pulsar"></span><b>Pulsar</b><small>Spins fast, sweeps two beams of light.</small></button>
+        <button data-v="aurora" class="uni form-card"><span class="form-v" data-form-preview="aurora"></span><b>Aurora</b><small>Shimmering northern-light curtains.</small></button>
+        <button data-v="eclipse" class="uni form-card"><span class="form-v" data-form-preview="eclipse"></span><b>Eclipse</b><small>A dark moon wearing a golden corona.</small></button>
+        <button data-v="galaxy" class="uni form-card"><span class="form-v" data-form-preview="galaxy"></span><b>Galaxy</b><small>A bright core with spiral arms.</small></button>
+        <button data-v="comet" class="uni form-card"><span class="form-v" data-form-preview="comet"></span><b>Comet</b><small>An icy head with a streaming tail.</small></button>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i data-ico="eye"></i>Voidy's eyes</h3>
+      <div class="seg acc-seg eye-seg" id="eye-seg"></div>
+    </div>
+    <div class="card">
+      <h3><i data-ico="star"></i>Voidy's accessory</h3>
+      <div class="seg acc-seg" id="acc-seg">
+        <button data-v="none"><i data-ico="hole"></i>None</button>
+        <button data-v="halo"><i data-ico="orbit"></i>Zero halo</button>
+        <button data-v="crown"><i data-ico="crown"></i>Crown</button>
+        <button data-v="ears"><i data-ico="cat"></i>Cat ears</button>
+        <button data-v="bow"><i data-ico="bow"></i>Bow</button>
+        <button data-v="antenna"><i data-ico="antenna"></i>Antenna</button>
+        <button data-v="wizard"><i data-ico="hat"></i>Wizard hat</button>
+        <button data-v="phones"><i data-ico="headphones"></i>Headphones</button>
+        <button data-v="sprout"><i data-ico="leaf"></i>Sprout</button>
+      </div>
+    </div>
+    <div class="tgl-list">
+      <label class="tgl" style="--c:var(--a2)"><i data-ico="orbit"></i><div><b>Animations</b><span>Voidy floats, eats blocked items and plays a little animation when you switch modes. Turn off for a calmer popup.</span></div><span class="sw"><input type="checkbox" id="x-motion"><span></span></span></label>
+      <label class="tgl" style="--c:var(--a1)"><i data-ico="badge"></i><div><b>Count on the toolbar icon</b><span>Shows how many requests were blocked on the current page.</span></div><span class="sw"><input type="checkbox" id="x-badge"><span></span></span></label>
+    </div>
+  </section>
+
+  <!-- ===================================================== LOGS -->
+  <section class="panel" data-panel="logs">
+    <header class="ph"><h1>Activity log</h1><p>What Auto and you decided, in plain words. Last 200 events, kept on this computer only.</p></header>
+    <div class="card">
+      <div class="card-h"><div class="filters" id="logfilter">
+        <button data-k="all" class="on">All</button><button data-k="stealth">Stealth</button><button data-k="you">Your choices</button><button data-k="guard">Guard</button>
+      </div><button class="btn ghost small" id="log-clear">Clear log</button></div>
+      <ul class="log" id="log"></ul>
+      <p class="empty" id="no-log">Nothing yet. When a site fights the blocker, Auto's steps show up here.</p>
+    </div>
+  </section>
+
+  <!-- ===================================================== BACKUP -->
+  <section class="panel" data-panel="backup">
+    <header class="ph"><h1>Backup &amp; reset</h1><p>Move your settings to another computer, or start fresh.</p></header>
+    <div class="grid2">
+      <div class="card">
+        <h3>Backup</h3>
+        <p class="lead">Modes, filters, guard, safety and appearance, as one file. Statistics and the log are not included.</p>
+        <div class="addrow"><button class="btn" id="export">Export settings</button><button class="btn ghost" id="import-btn">Import settings</button></div>
+        <input type="file" id="import-file" accept="application/json" hidden>
+      </div>
+      <div class="card danger-card">
+        <h3>Reset</h3>
+        <p class="lead">Puts every setting back to default. Your statistics are kept.</p>
+        <button class="btn danger" id="reset">Reset all settings</button>
+      </div>
+    </div>
+  </section>
+  </main>
+  <aside class="rail" id="rail" aria-label="Voidy's notes for this page"></aside>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<script src="../lib/icons.js"></script>
+  <script src="../lib/voidy-mascot.js"></script>
+  <script src="../lib/voidy-life.js"></script>
+<script src="../lib/privacy-controls.js"></script>
+<script src="options.js"></script>
+<script src="rail.js"></script>
+<script src="../lib/cosmos.js"></script>
+</body>
+</html>

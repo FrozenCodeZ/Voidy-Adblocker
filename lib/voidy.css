@@ -1,0 +1,554 @@
+/* ==========================================================================
+   Voidy: the mascot, its moods and mode-switch animations, accessories,
+   and the "cosmos" page look (starfield, nebula glow, glass cards).
+   Colours come from lib/theme.css.
+   ========================================================================== */
+
+/* ---------- page look: stars + nebula behind everything ------------------ */
+html { background: var(--bg); }
+body.cosmos { background: transparent; position: relative; }
+body.cosmos::before, body.cosmos::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+body.cosmos::after {                          /* nebula glow */
+  z-index: -2;
+  background:
+    radial-gradient(70% 38% at 30% -6%, var(--neb1), transparent 70%),
+    radial-gradient(55% 34% at 105% 18%, var(--neb2), transparent 72%),
+    radial-gradient(60% 30% at -10% 85%, color-mix(in srgb, var(--neb2) 60%, transparent), transparent 70%);
+}
+body.cosmos::before {                         /* two layers of stars */
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, var(--star), transparent 60%),
+    radial-gradient(1px 1px at 68% 8%, var(--star), transparent 60%),
+    radial-gradient(1.6px 1.6px at 84% 42%, var(--star), transparent 60%),
+    radial-gradient(1px 1px at 36% 64%, var(--star), transparent 60%),
+    radial-gradient(1.3px 1.3px at 92% 88%, var(--star), transparent 60%),
+    radial-gradient(1px 1px at 22% 92%, var(--star), transparent 60%),
+    radial-gradient(1px 1px at 52% 34%, var(--star), transparent 60%),
+    radial-gradient(1.8px 1.8px at 6% 56%, var(--star), transparent 60%);
+  background-size: 190px 210px, 260px 240px, 230px 290px, 170px 190px, 310px 260px, 200px 230px, 280px 200px, 340px 320px;
+  opacity: .55; animation: v-twinkle 7s ease-in-out infinite alternate;
+}
+@keyframes v-twinkle { to { opacity: .25; } }
+[data-theme="whitehole"] body.cosmos::before { opacity: .35; }
+
+/* glass cards */
+.cosmos .card:not(.protect) {
+  background: color-mix(in srgb, var(--card) 68%, transparent);
+  border-color: color-mix(in srgb, var(--a1) 16%, var(--line));
+  backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow: 0 14px 34px -18px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+[data-theme="whitehole"] .cosmos .card:not(.protect) { box-shadow: 0 14px 30px -20px rgba(60, 30, 120, .35); }
+
+/* ---------- the mascot ---------------------------------------------------- */
+.voidy {
+  --vs: 168px;                                /* size */
+  --d1: #ff9a3c; --d2: #ffd166; --spin: 1.1s; --spark: #fff;
+  --eye: #ffffff; --pupil: #150c28; --face: #ffffff; --blush: #ff7eb6; --acc: #ffd166;
+  position: relative; width: var(--vs); height: calc(var(--vs) * .9); margin: 0 auto; perspective: 520px;
+}
+.voidy.mini { --vs: 40px; perspective: none; }
+.v-defs { position: absolute; }
+
+/* depth stack: bob (float) > tilt (mouse) > squish (mode animations, acts) > layers */
+.v-bob, .v-tilt, .v-squish { position: absolute; inset: 0; transform-style: preserve-3d; }
+.v-bob { animation: v-bob 4.2s ease-in-out infinite; }
+.v-tilt { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .35s cubic-bezier(.2, .8, .3, 1); }
+.v-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.v-crumbs { transform: translateZ(10px); pointer-events: none; }
+.v-face   { transform: translateZ(20px); }
+.v-acc    { transform: translateZ(26px); }
+@keyframes v-bob { 50% { transform: translateY(-7px); } }
+@keyframes v-flow { to { stroke-dashoffset: -10; } }
+
+/* shiny kawaii highlights and the little sparkles around every form */
+.v-gloss { fill: #fff; opacity: .22; }
+.v-gloss2 { opacity: .4; }
+.kw-spark { fill: var(--spark); transform-box: fill-box; transform-origin: center; animation: v-twinkle-star 2.6s ease-in-out infinite; }
+.kw-dot { fill: var(--spark); opacity: .7; }
+.twinkle { fill: #fff; animation: v-twinkle-star 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes v-twinkle-star { 50% { opacity: .2; transform: scale(.5) rotate(45deg); } }
+.voidy.mini .kw-sparks { display: none; }
+
+/* ---------- face ---------------------------------------------------------- */
+.v-eye { fill: var(--eye); } .v-pupil { fill: var(--pupil); } .v-glint { fill: #fff; }
+.v-eyes { transform-box: view-box; transform-origin: 100px 98px; animation: v-blink 5.5s infinite; }
+@keyframes v-blink { 0%, 93%, 100% { transform: scaleY(1); } 95.5% { transform: scaleY(.08); } }
+.v-eye-l, .v-eye-r { transform-box: view-box; transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+.v-eye-l { transform-origin: 83px 98px; } .v-eye-r { transform-origin: 117px 98px; }
+.voidy:hover .v-eye-l, .voidy:hover .v-eye-r { transform: scale(1.1); }
+.v-pupils { transform: translate(var(--px, 0px), var(--py, 0px)); transition: transform .2s ease-out; }
+/* eye drawing styles (Appearance setting, html[data-eyes]); Shiny is the default */
+.ey { display: none; }
+:root:not([data-eyes]) .ey-shiny, [data-eyes="shiny"] .ey-shiny, [data-eyes="starry"] .ey-starry, [data-eyes="anime"] .ey-anime,
+[data-eyes="beans"] .ey-beans, [data-eyes="chill"] .ey-chill, [data-eyes="rings"] .ey-rings, [data-eyes="pixel"] .ey-pixel,
+.eye-prev .ey { display: inline; }
+.ey-star { transform-box: fill-box; transform-origin: center; animation: ey-star 3s ease-in-out infinite; }
+@keyframes ey-star { 50% { transform: scale(.78) rotate(45deg); } }
+.ey-iris { fill: var(--d1); }
+.ey-iris-shade { fill: var(--pupil); opacity: .35; }
+.ey-lash, .ey-lid { fill: none; stroke: var(--face); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ey-lid { stroke-width: 3.4; }
+.ey-bean { fill: var(--face); filter: drop-shadow(0 0 3px color-mix(in srgb, var(--d2) 70%, transparent)); }
+.ey-bean-glint { fill: var(--pupil); opacity: .35; }
+.ey-ring { fill: #0b0714; stroke: var(--d2); stroke-width: 3; filter: drop-shadow(0 0 3px var(--d1)); }
+.ey-ring-core { fill: var(--d1); }
+.ey-px { shape-rendering: crispEdges; }
+.eye-prev { --eye: #fff; --pupil: #150c28; --face: #fff; --d1: #ff9a3c; --d2: #ffd166;
+  display: block; width: 46px; height: 23px; border-radius: 9px; background: radial-gradient(circle at 50% 40%, #2a1745, #0b0714); }
+.v-blush { fill: var(--blush); opacity: .55; transform-box: fill-box; transform-origin: center; }
+.v-lids path { fill: none; stroke: var(--face); stroke-width: 3.2; stroke-linecap: round; }
+.v-dizzy path { stroke-width: 2.4; }
+.v-hearts path { fill: #ff5c93; stroke: #fff; stroke-width: 1; }
+.v-lids, .v-hearts, .v-shades, .v-mask, .v-mug { display: none; }
+.v-mouths > * { display: none; }
+.v-smile, .v-cat, .v-smile-t { fill: none; stroke: var(--face); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.v-mouths .v-smile { display: inline; }
+.v-tongue-t { fill: #ff7e9b; }
+.v-mouth, .v-yawn { fill: #2b0f2a; stroke: var(--face); stroke-width: 2.2; }
+.v-shades rect { fill: #0b0714; stroke: var(--d2); stroke-width: 1.5; }
+.v-bridge { stroke: #0b0714; stroke-width: 3; }
+.v-shine { stroke: #fff; stroke-width: 2; stroke-linecap: round; opacity: .7; }
+.v-mask path:first-child { fill: #0b0714; stroke: var(--d1); stroke-width: 1.2; }
+.v-slit { fill: none; stroke: var(--d1); stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 4px var(--d1)); }
+.v-tail { fill: none; stroke: #0b0714; stroke-width: 5; stroke-linecap: round; }
+.mug-body { fill: #fff4e6; stroke: #c98b5a; stroke-width: 1.6; }
+.mug-handle { fill: none; stroke: #c98b5a; stroke-width: 2.2; }
+.mug-heart { fill: #ff7eb6; }
+.mug-steam { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; opacity: .7; animation: v-steam 1.4s ease-in-out infinite; }
+.mug-steam.m2 { animation-delay: .7s; }
+@keyframes v-steam { 0% { opacity: 0; transform: translateY(4px); } 50% { opacity: .8; } 100% { opacity: 0; transform: translateY(-5px); } }
+
+.voidy.eating .v-smile { display: none; }
+.voidy.eating .v-mouth { display: inline; animation: v-chomp .25s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes v-chomp { to { transform: scaleY(.45); } }
+
+/* speech bubble (emoji and short lines) */
+.v-bubble { position: absolute; right: -4px; top: -2px; z-index: 3; padding: 3px 8px; border-radius: 12px 12px 12px 3px; pointer-events: none;
+  background: color-mix(in srgb, #fff 92%, var(--a1)); color: #1d1533; font: 700 12px/1.3 system-ui, sans-serif; white-space: nowrap;
+  box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .5); opacity: 0; transform: translateY(6px) scale(.6); transform-origin: left bottom; }
+.v-bubble.show { animation: v-bubble var(--bubble-ms, 2600ms) cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes v-bubble { 0% { opacity: 0; transform: translateY(6px) scale(.6); } 12%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-6px) scale(.9); } }
+.voidy.mini .v-bubble { display: none; }
+
+/* ---------- accessories (Appearance setting, html[data-acc]) ------------- */
+.acc { display: none; }
+[data-acc="halo"] .acc-halo, [data-acc="crown"] .acc-crown, [data-acc="ears"] .acc-ears, [data-acc="bow"] .acc-bow,
+[data-acc="antenna"] .acc-antenna, [data-acc="wizard"] .acc-wizard, [data-acc="phones"] .acc-phones,
+[data-acc="sprout"] .acc-sprout { display: inline; }
+.acc-halo ellipse { fill: none; stroke: var(--acc); stroke-width: 3.5; }
+.acc-halo ellipse:first-child { stroke-width: 8; opacity: .6; }
+.acc-halo { animation: v-halo 3s ease-in-out infinite; transform-box: view-box; transform-origin: 100px 38px; }
+@keyframes v-halo { 50% { transform: translateY(-3px) rotate(-4deg); } }
+.acc-crown path { fill: var(--acc); stroke: color-mix(in srgb, var(--acc) 60%, #000); stroke-width: 1.5; stroke-linejoin: round; }
+.acc-crown .gem { fill: var(--d1); }
+.acc-ears .inner { fill: var(--blush); opacity: .7; }
+.acc-bow path { fill: var(--blush); stroke: color-mix(in srgb, var(--blush) 60%, #000); stroke-width: 1.2; }
+.acc-bow .knot { fill: color-mix(in srgb, var(--blush) 75%, #fff); }
+.acc-antenna .stem, .acc-sprout .stem { fill: none; stroke: var(--face); stroke-width: 2.5; stroke-linecap: round; }
+[data-theme="whitehole"] .acc-antenna .stem { stroke: #6d5fa8; }
+.acc-antenna .ball { fill: var(--acc); } .acc-antenna .ball-glow { fill: var(--acc); opacity: .6; }
+.acc-antenna .sway { transform-box: view-box; transform-origin: 100px 52px; animation: v-sway 2.4s ease-in-out infinite; }
+@keyframes v-sway { 50% { transform: rotate(10deg); } }
+.acc-wizard path:first-child { fill: color-mix(in srgb, var(--d1) 70%, #1a0f35); stroke: var(--d1); stroke-width: 1.2; }
+.acc-wizard .brim { fill: color-mix(in srgb, var(--d1) 55%, #120a26); }
+.acc-wizard .stars { fill: var(--acc); }
+.acc-phones .band { fill: none; stroke: var(--d1); stroke-width: 6; stroke-linecap: round; }
+.acc-phones rect { fill: var(--d2); stroke: color-mix(in srgb, var(--d2) 55%, #000); stroke-width: 1.5; }
+.acc-sprout .stem { stroke: #5fd08a; }
+.acc-sprout .leaf { fill: #6fe39a; stroke: #3fa866; stroke-width: 1; }
+
+/* ---------- moods (one per protection level) ----------------------------- */
+/* Lite: calmer */
+.voidy.is-lite { --spin: 2.4s; }
+.voidy.is-lite .f > :not(.f-main):not(.kw-sparks) { opacity: .75; }
+/* Off / no website: asleep and grey */
+.voidy.is-off, .voidy.is-idle { --spin: 6s; }
+.voidy.is-off .v-eyes, .voidy.is-idle .v-eyes { display: none; }
+.voidy.is-off .v-sleep, .voidy.is-idle .v-sleep { display: inline; }
+.voidy.is-off .v-bob, .voidy.is-idle .v-bob { animation-duration: 7s; }
+.voidy.is-off .f, .voidy.is-idle .f { filter: grayscale(.85) brightness(.75); }
+.voidy.is-off .kw-sparks, .voidy.is-idle .kw-sparks { display: none; }
+/* Stealth 1: sunglasses */
+.voidy.is-stealth1 .v-eyes, .voidy.is-stealth2 .v-eyes, .voidy.is-stealth3 .v-eyes { display: none; }
+.voidy.is-stealth1 .v-shades, .voidy.is-stealth2 .v-shades { display: inline; }
+/* Stealth 2: cloaked, see-through */
+.voidy.is-stealth2 .f > * { opacity: .42; }
+.voidy.is-stealth2 .v-blush { opacity: .2; }
+/* Stealth 3: past the event horizon. Almost invisible, only a glowing mask */
+.voidy.is-stealth3 { --spin: .6s; }
+.voidy.is-stealth3 .f > * { opacity: .13; }
+.voidy.is-stealth3 .v-mask { display: inline; }
+.voidy.is-stealth3 .v-mouths, .voidy.is-stealth3 .v-blush { display: none; }
+.voidy.is-stealth3 .v-wave2 { animation: v-ripple 3.2s ease-out infinite; }
+/* sleepy: left alone for a while (popup/voidy.js) */
+.voidy.sleepy .v-eyes { animation: none; transform: translateY(3px) scaleY(.4); }
+.voidy.sleepy .v-bob { animation-duration: 7s; }
+.voidy.sleepy .v-blush { opacity: .3; }
+
+/* ---------- mode switches: spin up while applying, then an arrival ------- */
+.voidy.charging { --spin: .18s; }
+.v-wave, .v-zero, .v-flash { position: absolute; left: 50%; top: 50%; border-radius: 50%; opacity: 0; pointer-events: none; }
+.v-wave { width: 100px; height: 100px; margin: -50px; border: 2px solid var(--d1); }
+.v-zero { width: 46px; height: 64px; margin: -32px -23px; border: 4px solid var(--a1); box-shadow: 0 0 14px var(--a1), inset 0 0 10px var(--a1); }
+.v-flash { width: 120px; height: 120px; margin: -60px; background: radial-gradient(closest-side, #fff, color-mix(in srgb, var(--d1) 60%, transparent) 45%, transparent); }
+@keyframes v-wave { from { transform: scale(.6); opacity: .85; } to { transform: scale(1.75); opacity: 0; } }
+@keyframes v-ripple { 0% { transform: scale(.55); opacity: 0; } 20% { opacity: .5; } 100% { transform: scale(1.6); opacity: 0; } }
+
+/* Auto / Full: ignite. A gulp and a bright shockwave */
+.voidy.t-happy .v-squish { animation: v-gulp .75s cubic-bezier(.3, .7, .4, 1); }
+.voidy.t-happy .v-wave { animation: v-wave .75s ease-out; }
+@keyframes v-gulp { 22% { transform: scale(1.16, .84); } 48% { transform: scale(.88, 1.12); } 72% { transform: scale(1.04, .96); } }
+
+/* Lite: soft ripple */
+.voidy.t-lite .v-squish { animation: v-breathe 1s ease-in-out; }
+.voidy.t-lite .v-wave { border-width: 1px; animation: v-wave 1.1s ease-out; }
+.voidy.t-lite .v-wave2 { border-width: 1px; animation: v-wave 1.1s ease-out .25s; }
+@keyframes v-breathe { 40% { transform: scale(.93); } 75% { transform: scale(1.03); } }
+
+/* Off: collapse to zero. Voidy shrinks to a dot and a glowing "0" flashes */
+.voidy.t-off .v-squish { animation: v-collapse 1.1s cubic-bezier(.6, 0, .3, 1); }
+.voidy.t-off .v-zero { animation: v-zero 1.1s ease-out; }
+@keyframes v-collapse { 35%, 58% { transform: scale(.08); opacity: .2; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes v-zero { 30% { opacity: 0; transform: scale(.4); } 45% { opacity: 1; transform: scale(1); } 70% { opacity: .9; transform: scale(1.05); } 100% { opacity: 0; transform: scale(1.5); } }
+
+/* Stealth 1: shades on. A quick wink-squish, then the sunglasses drop */
+.voidy.t-stealth1 .v-squish { animation: v-breathe .6s ease-in-out; }
+.voidy.t-stealth1 .v-shades { transform-box: view-box; animation: v-drop .7s cubic-bezier(.3, 1.6, .5, 1) .1s both; }
+@keyframes v-drop { from { transform: translateY(-50px); opacity: 0; } 50% { opacity: 1; } to { transform: none; opacity: 1; } }
+
+/* Stealth 2: cloak. Flickers out of sight, then fades back see-through */
+.voidy.t-stealth2 .v-squish { animation: v-cloak 1s steps(1, end); }
+.voidy.t-stealth2 .v-shades { transform-box: view-box; animation: v-drop .6s cubic-bezier(.3, 1.6, .5, 1) .45s both; }
+@keyframes v-cloak { 0% { opacity: 1; } 12% { opacity: .2; transform: translateX(-5px); } 24% { opacity: .75; transform: translateX(4px); }
+  36% { opacity: .08; transform: translateX(-2px); } 52% { opacity: .5; transform: none; } 70% { opacity: .15; } 85% { opacity: .7; } }
+
+/* Stealth 3: event horizon. A flash, space ripples, then only the mask glows */
+.voidy.t-stealth3 .v-squish { animation: v-horizon 1.1s cubic-bezier(.5, 0, .3, 1); }
+.voidy.t-stealth3 .v-flash { animation: v-flash .9s ease-out; }
+.voidy.t-stealth3 .v-wave { animation: v-wave .9s ease-out .15s; }
+.voidy.t-stealth3 .v-wave2 { animation: v-wave .9s ease-out .4s; }
+.voidy.t-stealth3 .v-mask { transform-box: view-box; transform-origin: 100px 98px; animation: v-mask .7s ease-out .45s both; }
+@keyframes v-horizon { 25% { transform: scale(1.18); filter: brightness(1.8); } 55% { transform: scale(.82); } 100% { transform: scale(1); } }
+@keyframes v-flash { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: .9; } 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes v-mask { from { transform: scaleX(0); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* crumbs: blocked things spiral into the hole */
+.v-crumb { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 2px;
+  opacity: 0; animation: v-suck 1.05s cubic-bezier(.5, 0, .85, .45) both; box-shadow: 0 0 6px currentColor; }
+.v-crumb.ad { width: auto; height: auto; margin: -6px 0 0 -9px; padding: 1px 3px; border-radius: 3px;
+  background: #ff5c93; color: #fff; font: 800 7px/1.2 system-ui, sans-serif; letter-spacing: .3px; box-shadow: none; }
+@keyframes v-suck {
+  0%   { transform: rotate(var(--a)) translateX(var(--d)) rotate(0deg) scale(1); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: rotate(calc(var(--a) + 280deg)) translateX(0px) rotate(360deg) scale(.1); opacity: .3; }
+}
+
+/* sleeping z's and the shadow below */
+.v-zzz { position: absolute; right: 18px; top: 8px; display: none; font: 700 13px system-ui, sans-serif; color: var(--ink-2); }
+.voidy.is-off .v-zzz, .voidy.is-idle .v-zzz { display: block; }
+.v-zzz span { position: absolute; opacity: 0; animation: v-z 3s ease-out infinite; }
+.v-zzz span:nth-child(2) { animation-delay: 1s; font-size: 11px; }
+.v-zzz span:nth-child(3) { animation-delay: 2s; font-size: 15px; }
+@keyframes v-z { 0% { transform: translate(0, 18px); opacity: 0; } 30% { opacity: .9; } 100% { transform: translate(14px, -14px); opacity: 0; } }
+.v-floor { position: absolute; left: 50%; bottom: 0; width: 60%; height: 8%; margin-left: -30%; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--d1) 45%, transparent), transparent);
+  animation: v-floor 4.2s ease-in-out infinite; }
+@keyframes v-floor { 50% { transform: scale(.8); opacity: .6; } }
+.voidy.mini .v-floor, .voidy.mini .v-zzz, .voidy.mini .v-crumbs { display: none; }
+
+/* ---------- "still": animations off, or the system asks for less motion -- */
+html.still .voidy, html.still .voidy *, html.still body.cosmos::before { animation: none !important; transition: none !important; }
+html.still .v-tilt { transform: none; }
+html.still .v-zzz span:nth-child(1) { opacity: .7; transform: translate(4px, 4px); }
+html.still .v-zzz span:nth-child(3) { opacity: .5; transform: translate(14px, -10px); }
+
+/* ==========================================================================
+   Forms: Voidy's body (chosen separately from the background universe).
+   Kawaii style: a round face, a signature aura, sparkles around.
+   ========================================================================== */
+.voidy .f { display: none; }
+.voidy.form-blackhole .f-blackhole, .voidy.form-whitehole .f-whitehole, .voidy.form-nebula .f-nebula,
+.voidy.form-supernova .f-supernova, .voidy.form-pulsar .f-pulsar, .voidy.form-aurora .f-aurora,
+.voidy.form-eclipse .f-eclipse, .voidy.form-galaxy .f-galaxy, .voidy.form-comet .f-comet { display: inline; }
+/* per-form colours (accessories, waves, masks use --d1/--d2); bright bodies get a dark face */
+.voidy.form-whitehole { --d1: #ffc14d; --d2: #ffd1e8; --spark: #ffc14d; --eye: #2b2244; --pupil: #fff6e0; --face: #2b2244; }
+.voidy.form-nebula    { --d1: #ff7adf; --d2: #5fc8ff; --eye: #2a1446; --pupil: #fff; --face: #2a1446; --blush: #ff5c9e; }
+.voidy.form-supernova { --d1: #ff8a3d; --d2: #ffd34d; --spark: #ffe08a; --eye: #3a1206; --pupil: #ffe9b8; --face: #3a1206; }
+.voidy.form-pulsar    { --d1: #6fd3ff; --d2: #3a74ff; --spark: #bff4ff; }
+.voidy.form-aurora    { --d1: #5ef0b0; --d2: #b07dff; --spark: #b8ffe4; }
+.voidy.form-eclipse   { --d1: #f3dfa6; --d2: #c9a45c; --spark: #fff1c8; }
+.voidy.form-galaxy    { --d1: #ff9be6; --d2: #6fe0ff; }
+.voidy.form-comet     { --d1: #9fe8ff; --d2: #fff1d0; --spark: #dff6ff; }
+
+/* shared motion helpers (speed follows --spin, so "charging" spins them up) */
+.f [class*="spin-"], .ps-beams, .spin-arms, .drift, .au-curtains, .sn-shock { transform-box: view-box; transform-origin: 100px 100px; }
+.f .spin-slow { animation: v-rot calc(var(--spin) * 26) linear infinite; }
+.f .spin-fast { animation: v-rot calc(var(--spin) * 9) linear infinite; }
+.spin-arms    { animation: v-rot calc(var(--spin) * 22) linear infinite reverse; }
+@keyframes v-rot { to { transform: rotate(360deg); } }
+
+/* black hole, Interstellar-style: stacked colour layers (purple haze, pink, orange, yellow,
+   white-hot) form a wide flat disk, an arch bending over the sphere and a smaller one under
+   it. Streaks flow along the disk. Mostly flat; now and then it tilts. */
+.bh-haze { filter: blur(4px); opacity: .85; }
+.bh-rim { fill: none; stroke: #ff7aa8; stroke-width: 1.6; opacity: .85; }
+.bh-streak { fill: none; stroke: #fffaf0; stroke-width: 1.3; stroke-linecap: round; opacity: .75;
+  stroke-dasharray: 16 9 5 12 24 14; animation: bh-flow calc(var(--spin) * 5) linear infinite; }
+.bh-streak.s2, .bh-streak.s4 { stroke: #ffe8a8; opacity: .6; stroke-dasharray: 9 13 20 8; animation-duration: calc(var(--spin) * 7); }
+.bh-streak.s3, .bh-streak.s5 { stroke: #ffc2e0; opacity: .5; animation-direction: reverse; }
+@keyframes bh-flow { to { stroke-dashoffset: -100; } }
+.bh-tilt { transform-box: view-box; transform-origin: 100px 126px; animation: bh-tilt 14s ease-in-out infinite; }
+@keyframes bh-tilt { 0%, 62%, 100% { transform: rotate(0deg); } 72%, 84% { transform: rotate(-10deg); } 92% { transform: rotate(3deg); } }
+/* white hole: pastel light petals turning around a glowing face */
+.wh-petal { opacity: .9; } .wh-petal.p0 { fill: #ffe9a8; } .wh-petal.p1 { fill: #ffd1e8; } .wh-petal.p2 { fill: #cfe8ff; }
+.wh-halo { fill: none; stroke: #fff; stroke-width: 3; opacity: .6; }
+.wh-rim { fill: none; stroke: #ffd98a; stroke-width: 2; }
+/* nebula: a soft cloud */
+.drift { animation: v-drift 9s ease-in-out infinite; }
+@keyframes v-drift { 50% { transform: rotate(4deg) scale(1.03); } }
+.neb-glow { fill: #ff9be6; opacity: .55; }
+.neb-puff { fill: #fff; opacity: .13; } .neb-puff2 { opacity: .1; }
+.neb-edge { fill: none; stroke: #fff; stroke-width: 2; opacity: .5; }
+/* supernova */
+.sn-shock { fill: none; stroke: #ffc27a; stroke-width: 2; opacity: 0; animation: v-shock 2.8s ease-out infinite; }
+.sn-shock2 { animation-delay: 1.4s; }
+@keyframes v-shock { 0% { transform: scale(.7); opacity: .7; } 100% { transform: scale(1.55); opacity: 0; } }
+.sn-rim { fill: none; stroke: #fff3c4; stroke-width: 2; }
+.sn-ember { fill: #ffd580; }
+/* pulsar */
+.ps-beams { animation: v-rot calc(var(--spin) * 3.2) linear infinite; mix-blend-mode: screen; }
+.ps-line { fill: none; stroke: #7fd4ff; stroke-width: 1.2; stroke-dasharray: 3 5; opacity: .45; animation: v-flow calc(var(--spin) * 2) linear infinite; }
+.ps-rim { fill: none; stroke: #b8f1ff; stroke-width: 2.5; filter: drop-shadow(0 0 6px #6fd3ff); }
+/* aurora */
+.au-glow { fill: #5ef0b0; opacity: .45; }
+.au-curtains { animation: v-curtain 5s ease-in-out infinite alternate; }
+@keyframes v-curtain { from { transform: translateX(-16px); } to { transform: translateX(16px); } }
+.au-curtains path { mix-blend-mode: screen; }
+.au-edge { fill: none; stroke: #b8ffe4; stroke-width: 1.6; opacity: .6; }
+.au-ribbon { fill: none; stroke: #8affd8; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 30 70; opacity: .7;
+  filter: drop-shadow(0 0 4px #5ef0b0); animation: v-flow calc(var(--spin) * 4) linear infinite; }
+.au-ribbon2 { stroke: #c79bff; opacity: .5; animation-duration: calc(var(--spin) * 6); }
+/* eclipse: a cratered moon with a white-gold corona and a diamond flare */
+.ec-crater { fill: #000; opacity: .35; stroke: rgba(255, 255, 255, .08); }
+.ec-rim { fill: none; stroke: #fff7dc; stroke-width: 1.6; opacity: .95; }
+.ec-streamer { fill: none; stroke: #fff1c8; stroke-width: 1.5; stroke-linecap: round; opacity: .5; }
+.ec-flare { fill: #fffaf0; } .ec-spark { fill: #fff; }
+.ec-diamond { animation: v-diamond 3.5s ease-in-out infinite; }
+@keyframes v-diamond { 50% { opacity: .45; } }
+/* galaxy: a starry face with spiral arms */
+.gx-arm-glow { fill: none; stroke-width: 16; opacity: .5; stroke-linecap: round; }
+.gx-arm { fill: none; stroke-width: 5.5; stroke-linecap: round; opacity: .95; }
+.gx-star, .gx-speck { fill: #fff; } .gx-speck { opacity: .8; }
+.gx-rim { fill: none; stroke: #c9b0ff; stroke-width: 1.8; }
+/* comet */
+.co-tail { transform-box: view-box; transform-origin: 96px 104px; animation: v-tail 2.2s ease-in-out infinite alternate; }
+.co-ion { animation-duration: 1.6s; }
+@keyframes v-tail { to { transform: rotate(3deg) scaleY(1.05); opacity: .8; } }
+.co-rim { fill: none; stroke: #cfefff; stroke-width: 2; opacity: .8; }
+/* accessory ears take the form's colour */
+.acc-ears .ear { fill: color-mix(in srgb, var(--d1) 45%, #1a1030); }
+
+/* ==========================================================================
+   Acts: little things Voidy does on its own or when poked (popup/voidy.js
+   adds "act-<name>" for a moment). Simple, readable, and all skippable.
+   ========================================================================== */
+/* look around */
+.voidy.act-look .v-pupils { animation: act-look 2.4s ease-in-out; }
+@keyframes act-look { 20%, 35% { transform: translate(-3.5px, 0); } 55%, 70% { transform: translate(3.5px, -1.5px); } }
+/* wink */
+.voidy.act-wink .v-eye-r { visibility: hidden; }
+.voidy.act-wink .v-wink-r { display: inline; }
+.voidy.act-wink .v-mouths .v-smile { display: none; }
+.voidy.act-wink .v-mouths .v-cat { display: inline; }
+.voidy.act-wink .v-blush { animation: act-blush 1s ease-in-out; }
+@keyframes act-blush { 50% { transform: scale(1.35); opacity: .85; } }
+/* sunglasses on, slide them down, wink, take them off */
+.voidy.act-shades .v-shades { display: inline; transform-box: view-box; animation: act-shades 3.2s cubic-bezier(.3, 1.3, .5, 1) both; }
+.voidy.act-shades .v-eye-r { animation: act-wink-eye 3.2s steps(1, end) both; }
+.voidy.act-shades .v-wink-r { display: inline; animation: act-wink-arc 3.2s steps(1, end) both; }
+@keyframes act-shades { 0% { transform: translateY(-50px); opacity: 0; } 18%, 55% { transform: none; opacity: 1; }
+  66%, 88% { transform: translateY(10px); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+@keyframes act-wink-eye { 0% { opacity: 1; } 70% { opacity: 0; } 86% { opacity: 1; } }
+@keyframes act-wink-arc { 0% { opacity: 0; } 70% { opacity: 1; } 86% { opacity: 0; } }
+/* sip coffee: the mug rises, tilts twice, happy eyes */
+.voidy.act-coffee .v-mug { display: inline; transform-box: view-box; transform-origin: 108px 117px; animation: act-mug 3.4s ease-in-out both; }
+.voidy.act-coffee .v-eyes { animation: act-eyes-off 3.4s steps(1, end) both; }
+.voidy.act-coffee .v-happy { display: inline; animation: act-eyes-on 3.4s steps(1, end) both; }
+@keyframes act-mug { 0% { transform: translate(30px, 26px); opacity: 0; } 15% { transform: translate(14px, 8px); opacity: 1; }
+  30% { transform: translate(-4px, -1px) rotate(-26deg); } 42% { transform: translate(-2px, 1px) rotate(-8deg); }
+  54% { transform: translate(-4px, -1px) rotate(-30deg); } 70% { transform: translate(14px, 8px); opacity: 1; } 100% { transform: translate(30px, 26px); opacity: 0; } }
+@keyframes act-eyes-off { 0% { opacity: 1; } 25% { opacity: 0; } 72% { opacity: 1; } }
+@keyframes act-eyes-on { 0% { opacity: 0; } 25% { opacity: 1; } 72% { opacity: 0; } }
+/* stretch */
+.voidy.act-stretch .v-squish { animation: act-stretch 1.3s cubic-bezier(.3, .7, .4, 1); }
+.voidy.act-stretch .v-eyes { visibility: hidden; }
+.voidy.act-stretch .v-happy { display: inline; }
+@keyframes act-stretch { 30% { transform: scale(.88, 1.18) translateY(-6px); } 55% { transform: scale(1.1, .9); } 75% { transform: scale(.97, 1.03); } }
+/* giggle (a poke) */
+.voidy.act-giggle .v-squish { animation: act-giggle .9s ease-in-out; }
+.voidy.act-giggle .v-eyes { visibility: hidden; }
+.voidy.act-giggle .v-happy { display: inline; }
+.voidy.act-giggle .v-mouths .v-smile { display: none; }
+.voidy.act-giggle .v-mouths .v-cat { display: inline; }
+@keyframes act-giggle { 15% { transform: rotate(-8deg) translateY(-4px); } 35% { transform: rotate(7deg); } 55% { transform: rotate(-5deg) translateY(-2px); } 75% { transform: rotate(3deg); } }
+/* yawn (tired) */
+.voidy.act-yawn .v-eyes { animation: act-squint 2.2s ease-in-out both; }
+.voidy.act-yawn .v-mouths .v-smile { display: none; }
+.voidy.act-yawn .v-mouths .v-yawn { display: inline; transform-box: fill-box; transform-origin: center top; animation: act-yawn 2.2s ease-in-out both; }
+.voidy.act-yawn .v-squish { animation: act-yawn-body 2.2s ease-in-out; }
+@keyframes act-squint { 20%, 75% { transform: translateY(3px) scaleY(.3); } }
+@keyframes act-yawn { 0% { transform: scale(.3); } 30%, 70% { transform: scale(1.15, 1.3); } 100% { transform: scale(.3); } }
+@keyframes act-yawn-body { 40% { transform: scale(.97, 1.05); } }
+/* dizzy (poked a lot) */
+.voidy.act-dizzy .v-eyes { visibility: hidden; }
+.voidy.act-dizzy .v-dizzy { display: inline; }
+.voidy.act-dizzy .v-dizzy path { transform-box: fill-box; transform-origin: center; animation: v-rot .6s linear infinite; }
+.voidy.act-dizzy .v-mouths .v-smile { display: none; }
+.voidy.act-dizzy .v-mouths .v-tongue { display: inline; }
+.voidy.act-dizzy .v-squish { animation: act-wobble 1.8s ease-in-out; }
+@keyframes act-wobble { 25% { transform: translate(-4px, -2px) rotate(-6deg); } 50% { transform: translate(4px, 2px) rotate(6deg); } 75% { transform: translate(-3px, 1px) rotate(-3deg); } }
+/* love (heart eyes) */
+.voidy.act-love .v-eyes { visibility: hidden; }
+.voidy.act-love .v-hearts { display: inline; }
+.voidy.act-love .v-hearts path { transform-box: fill-box; transform-origin: center; animation: act-heart .5s ease-in-out infinite alternate; }
+@keyframes act-heart { to { transform: scale(1.25); } }
+/* full tummy after eating a lot */
+.voidy.act-full .v-squish { animation: act-full 1.8s ease-in-out; }
+.voidy.act-full .v-blush { animation: act-blush 1.8s ease-in-out; }
+.voidy.act-full .v-mouths .v-smile { display: none; }
+.voidy.act-full .v-mouths .v-cat { display: inline; }
+@keyframes act-full { 30%, 60% { transform: scale(1.09, 1.05); } 70% { transform: scale(.97, 1.02); } }
+/* startled awake */
+.voidy.act-startle .v-squish { animation: act-startle .7s cubic-bezier(.3, 1.6, .5, 1); }
+.voidy.act-startle .v-eye-l, .voidy.act-startle .v-eye-r { transform: scale(1.22); }
+@keyframes act-startle { 30% { transform: translateY(-12px) scale(1.05, .95); } }
+/* easter egg: glitch */
+.voidy.act-glitch .v-squish { animation: act-glitch 1s steps(1, end); }
+@keyframes act-glitch {
+  0%, 100% { transform: none; filter: none; clip-path: none; }
+  10% { transform: translate(-4px, 1px) skewX(8deg); filter: drop-shadow(3px 0 #ff00c8) drop-shadow(-3px 0 #00f0ff); }
+  20% { transform: translate(3px, -2px); clip-path: inset(20% 0 40% 0); }
+  30% { transform: translate(-2px, 2px) skewX(-10deg); clip-path: inset(58% 0 6% 0); }
+  42% { transform: none; clip-path: none; filter: drop-shadow(-3px 0 #ff00c8) drop-shadow(3px 0 #00f0ff); }
+  55% { transform: translate(5px, 0) scaleX(1.1); clip-path: inset(10% 0 70% 0); }
+  70% { transform: translate(-3px, 1px); clip-path: none; filter: hue-rotate(120deg); }
+  85% { transform: translate(1px, -1px); filter: none; } }
+html.still .voidy[class*="act-"] .v-squish, html.still .voidy[class*="act-"] * { animation: none !important; }
+
+/* ==========================================================================
+   Space scenery (lib/cosmos.js): behind the content, never clickable
+   except the rare UFO.
+   ========================================================================== */
+.cosmos-deco { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; --mx: 0; --my: 0; }
+/* parallax wrappers: nearer things move more */
+.cd-p { position: absolute; transition: translate .6s cubic-bezier(.2, .8, .3, 1); }
+.cd-galaxy-wrap { right: -24px; top: 38%; translate: calc(var(--mx) * var(--pp) * -.6) calc(var(--my) * var(--pp) * -.6); }
+.cd-system-wrap { left: 10px; bottom: 16px; translate: calc(var(--mx) * var(--pp) * -1.2) calc(var(--my) * var(--pp) * -1.2); }
+.cd-pleiades-wrap { right: 18px; bottom: 22%; translate: calc(var(--mx) * var(--pp) * -.3) calc(var(--my) * var(--pp) * -.3); }
+
+.cd-spark { position: absolute; width: 10px; height: 10px; fill: var(--star); transform: scale(var(--s)); opacity: .7;
+  filter: drop-shadow(0 0 3px var(--a1)); animation: cd-twinkle 4s ease-in-out infinite; }
+@keyframes cd-twinkle { 0%, 100% { opacity: .1; transform: scale(calc(var(--s) * .4)) rotate(0deg); } 50% { opacity: 1; transform: scale(var(--s)) rotate(90deg); } }
+
+/* drifting nebula clouds */
+.cd-cloud { position: absolute; width: 260px; height: 180px; border-radius: 50%; filter: blur(30px); opacity: .35; }
+.cd-cloud.c1 { left: -80px; top: 10%; background: var(--neb1); animation: cd-cloud 38s ease-in-out infinite alternate; }
+.cd-cloud.c2 { right: -90px; bottom: 5%; background: var(--neb2); animation: cd-cloud 46s ease-in-out infinite alternate-reverse; }
+@keyframes cd-cloud { to { transform: translate(90px, -40px) scale(1.25); } }
+
+/* galaxy: tilted, turns, core pulses, arm stars shimmer */
+.cd-galaxy { width: 150px; height: 150px; opacity: .5; fill: var(--star); transform: rotateX(55deg) rotateZ(-20deg); }
+.cd-arms { transform-box: view-box; transform-origin: 50px 50px; animation: v-rot 45s linear infinite; }
+.cd-arms circle { animation: cd-shimmer 3s ease-in-out infinite; }
+@keyframes cd-shimmer { 50% { opacity: .25; } }
+.cd-core { transform-box: fill-box; transform-origin: center; animation: cd-pulse 3.5s ease-in-out infinite; }
+@keyframes cd-pulse { 50% { transform: scale(1.35); opacity: .75; } }
+
+/* solar system, tilted in 3D */
+.cd-system { position: relative; width: 132px; height: 132px; opacity: .65; transform: rotateX(62deg) rotateZ(-18deg); transform-style: preserve-3d; }
+.cd-sun { position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%;
+  background: radial-gradient(circle, #fff, #ffd166 50%, #ff8a3d); box-shadow: 0 0 14px 3px #ffb347; animation: cd-sun 2.6s ease-in-out infinite; }
+@keyframes cd-sun { 50% { box-shadow: 0 0 22px 7px #ffb347; transform: scale(1.12); } }
+.cd-orbit { position: absolute; left: 50%; top: 50%; width: calc(var(--d) * 2); height: calc(var(--d) * 2); margin: calc(var(--d) * -1);
+  border: 1px solid color-mix(in srgb, var(--ink-3) 55%, transparent); border-radius: 50%; animation: v-rot var(--t) linear infinite; }
+.cd-planet { position: absolute; left: 50%; top: -3.5px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--a1) 60%); box-shadow: 0 0 8px var(--a1); }
+.cd-planet.p1 { width: 9px; height: 9px; top: -4.5px; margin-left: -4.5px; background: radial-gradient(circle at 35% 30%, #fff, var(--a2) 60%); box-shadow: 0 0 8px var(--a2); }
+.cd-planet.p2 { background: radial-gradient(circle at 35% 30%, #fff, #7fd4ff 60%); box-shadow: 0 0 8px #7fd4ff; }
+.cd-moon { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; border-radius: 50%; animation: v-rot 1.8s linear infinite; }
+.cd-moon::after { content: ""; position: absolute; left: 50%; top: -1px; width: 3px; height: 3px; margin-left: -1.5px; border-radius: 50%; background: #e8e6f0; }
+
+/* the Pleiades (Seven Sisters): blue-white stars with spikes in a soft haze */
+.cd-pleiades { width: 96px; height: 76px; opacity: .8; overflow: visible; }
+.cd-pleiades .haze { fill: #8fb8ff; opacity: .22; filter: blur(8px); }
+.cd-pleiades .sis { transform-box: fill-box; transform-origin: center; animation: cd-sister 3.2s ease-in-out infinite; }
+.cd-pleiades .sis path { fill: #eaf4ff; filter: drop-shadow(0 0 3px #9cc4ff); }
+.cd-pleiades .line { fill: none; stroke: #cfe2ff; stroke-width: .5; stroke-dasharray: 100; opacity: .35; animation: cd-draw 10s ease-in-out infinite; }
+@keyframes cd-sister { 50% { transform: scale(.6) rotate(20deg); opacity: .65; } }
+@keyframes cd-draw { 0% { stroke-dashoffset: 100; } 40%, 80% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -100; } }
+@keyframes cd-blink { 50% { transform: scale(1.8); opacity: .6; } }
+
+/* shooting stars: glowing head, fading trail */
+/* the head is the LEFT end (it leads); the trail fades out to the right, behind it */
+.cd-shoot { position: absolute; width: var(--len); height: 2px; border-radius: 2px; opacity: 0; transform: rotate(var(--ang)); transform-origin: left center;
+  background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--star) 55%, transparent) 30%, transparent);
+  animation: cd-shoot var(--dur) cubic-bezier(.3, .1, .6, 1) both; }
+.cd-shoot::after { content: ""; position: absolute; left: -2px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 8px 2px var(--a1), 0 0 14px 4px color-mix(in srgb, var(--a2) 60%, transparent); }
+@keyframes cd-shoot { 0% { opacity: 0; translate: 0 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; translate: var(--tx) var(--ty); } }
+/* a slow comet crossing now and then */
+.cd-comet { position: absolute; right: -120px; width: 110px; height: 3px; border-radius: 3px; opacity: 0;
+  background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--a1) 70%, transparent) 20%, transparent);
+  transform: rotate(14deg); animation: cd-comet 7s linear both; }
+.cd-comet::before { content: ""; position: absolute; left: -4px; top: -4px; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle, #fff, #bff4ff 50%, transparent 72%); box-shadow: 0 0 12px 4px #9fe8ff; }
+/* head on the left leads; it climbs along its 14° tilt (tan 14° = .25) so the tail trails straight behind */
+@keyframes cd-comet { 0% { opacity: 0; translate: 0 0; } 10%, 85% { opacity: .9; } 100% { opacity: 0; translate: calc(-100vw - 240px) calc((100vw + 240px) * -.25); } }
+
+.cd-ufo { position: fixed; z-index: 5; left: -60px; top: 18%; width: 40px; height: 30px; padding: 0; border: 0; background: none; cursor: pointer;
+  animation: cd-ufo 14s linear both; filter: drop-shadow(0 0 6px #7fffd4); }
+.cd-ufo svg { width: 100%; height: 100%; animation: cd-wobble 1.2s ease-in-out infinite alternate; }
+.cd-ufo .dome { fill: #bff4ff; opacity: .85; } .cd-ufo .hull { fill: #8a8fb3; }
+.cd-ufo .l { fill: #7fffd4; animation: cd-blink 1s infinite; transform-box: fill-box; transform-origin: center; }
+.cd-ufo .beam { fill: #7fffd4; opacity: .18; animation: cd-beam 2s ease-in-out infinite; }
+@keyframes cd-beam { 50% { opacity: .02; } }
+@keyframes cd-ufo { 0% { transform: translate(0, 0); } 50% { transform: translate(55vw, 30px); } 100% { transform: translate(115vw, -20px); } }
+@keyframes cd-wobble { to { transform: rotate(6deg) translateY(-2px); } }
+.cd-ufo.zap { animation: cd-zap .7s ease-in both; }
+@keyframes cd-zap { to { transform: translate(40vw, -60vh) scale(.2); opacity: 0; } }
+html.still .cosmos-deco *, html.still .cosmos-deco { animation: none !important; transition: none !important; }
+html.still .cd-shoot, html.still .cd-comet, html.still .cd-ufo { display: none; }
+/* the popup is narrow: put the scenery in the open sky around Voidy */
+body.cosmos:not(.dash) .cosmos-deco { position: absolute; bottom: auto; height: 100%; }
+body.cosmos:not(.dash) .cd-galaxy-wrap { top: 58px; right: -34px; }
+body.cosmos:not(.dash) .cd-galaxy { width: 120px; height: 120px; opacity: .65; }
+body.cosmos:not(.dash) .cd-system-wrap { left: -26px; top: 86px; bottom: auto; }
+body.cosmos:not(.dash) .cd-system { transform: scale(.72) rotateX(62deg) rotateZ(-18deg); transform-origin: left top; opacity: .75; }
+body.cosmos:not(.dash) .cd-pleiades-wrap { right: 62px; top: 30px; bottom: auto; }
+body.cosmos:not(.dash) .cd-pleiades { width: 64px; height: 50px; }
+
+/* ---- easter egg: click Voidy 7 times ---------------------------------- */
+.voidy.dizzy .v-tilt { animation: v-roll 1.2s cubic-bezier(.5, 0, .3, 1); }
+@keyframes v-roll { to { transform: rotateZ(720deg) rotateY(360deg); } }
+
+/* Bright flecks travel along the hand-painted disk as its outline bends. */
+.bh-spark-track { fill:none; stroke:#fff8d8; stroke-width:1.8; stroke-linecap:round; stroke-dasharray:14 38 4 51 20 83; opacity:.84; filter:drop-shadow(0 0 2px #ffb33b); animation:bh-light-travel 4.6s linear infinite; }
+.bh-spark-upper { stroke-width:1.5; opacity:.65; animation-duration:5.4s; animation-direction:reverse; }
+@keyframes bh-light-travel { to { stroke-dashoffset:-210; } }
+.v-greeting { display:none; transform-box:view-box; transform-origin:149px 107px; }
+.v-greeting path:first-child { fill:none; stroke:#ffb24d; stroke-width:5; stroke-linecap:round; }
+.v-greeting path:last-child { fill:#fff3c2; stroke:#ff7dab; stroke-width:1.3; stroke-linejoin:round; }
+.voidy.act-greet .v-greeting { display:inline; animation:voidy-greet 1.65s ease-in-out both; }
+.voidy.act-greet .v-eye-r { animation:voidy-greet-eye 1.65s ease-in-out; }
+.voidy.act-greet .v-pupils { animation:voidy-look-right 1.65s ease-in-out; }
+@keyframes voidy-greet { 0%,100% { transform:translateY(9px) rotate(6deg); opacity:0; } 20%,75% { opacity:1; } 35%,62% { transform:rotate(-16deg); } 48% { transform:rotate(10deg); } }
+@keyframes voidy-greet-eye { 45%,65% { transform:scaleY(.14); } }
+@keyframes voidy-look-right { 25%,70% { transform:translate(3px,-2px); } }
+.voidy.act-eye-roll .v-pupils { animation:voidy-eye-roll 1.5s ease-in-out; }
+.voidy.act-eye-roll .v-mouths .v-smile { display:none; }
+.voidy.act-eye-roll .v-mouths .v-cat { display:inline; }
+@keyframes voidy-eye-roll { 0%,100% { transform:none; } 25% { transform:translate(0,-5px); } 48% { transform:translate(4px,-4px); } 70% { transform:translate(-3px,-3px); } }
+.voidy.act-peek .v-squish { animation:voidy-peek 1.5s cubic-bezier(.25,1,.4,1) both; }
+@keyframes voidy-peek { 0% { opacity:0; transform:translateX(-32px) scale(.78); } 30% { opacity:1; transform:translateX(7px) scale(1.03); } 55% { transform:translateX(-2px) scale(.99); } 100% { transform:none; } }
+@media (prefers-reduced-motion:reduce) { .bh-spark-track,.voidy.act-greet .v-greeting,.voidy.act-greet .v-eye-r,.voidy.act-greet .v-pupils,.voidy.act-eye-roll .v-pupils,.voidy.act-peek .v-squish { animation:none; } }

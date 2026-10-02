@@ -1,0 +1,36 @@
+.privacy-choice { display:flex; align-items:flex-start; gap:9px; margin:13px 0; font-size:12px; line-height:1.45; }
+.privacy-choice > span { flex:1; min-width:0; }
+.privacy-choice small { display:block; color:var(--ink-2,#aab1c2); font-size:11px; margin-top:3px; font-weight:400; }
+.privacy-choice input { accent-color:var(--a1,#8f7dff); margin:3px 0 0; flex:none; }
+.privacy-choice select { max-width:145px; color:var(--ink,#eef0f6); background:var(--card-2,#1c2131); border:1px solid var(--line,#444); border-radius:6px; padding:5px; font:inherit; }
+.privacy-details { border-top:1px solid var(--line,#444); padding-top:10px; margin-top:12px; }
+.privacy-details summary { cursor:pointer; color:var(--ink,#eef0f6); font-weight:600; font-size:12px; }
+.privacy-details summary i { display:inline-block; width:14px; height:14px; vertical-align:-2px; margin-right:5px; }
+.privacy-details summary i svg { width:100%; height:100%; }
+.privacy-note,.privacy-scope,#privacy-status { color:var(--ink-2,#aab1c2); font-size:11px; line-height:1.5; }
+#privacy-status { min-height:1.5em; color:var(--a1,#ac95ff); }
+#extra-privacy { padding:11px 13px; background:linear-gradient(140deg,color-mix(in srgb,var(--a2) 12%,var(--card)),var(--card) 68%); }
+#extra-privacy h3 { margin:0 0 3px; font-size:13px; }
+#extra-privacy .privacy-scope { margin:0; }
+#extra-privacy .privacy-choice { margin:8px 0; }
+#extra-privacy .privacy-footnote { margin:8px 0 0; }
+#extra-privacy #privacy-status:empty { display:none; }
+#extra-privacy .privacy-details { margin-top:8px; padding-top:7px; }
+.privacy-max { width:100%; border:1px solid color-mix(in srgb,var(--a1) 45%,var(--line)); border-radius:8px; background:color-mix(in srgb,var(--a1) 12%,var(--card)); color:var(--ink); padding:6px 8px; font-size:11px; cursor:pointer; }
+.privacy-max:hover { background:color-mix(in srgb,var(--a1) 22%,var(--card)); }
+.privacy-max:disabled { opacity:.5; cursor:default; }
+#extra-privacy h3, #privacy-panel h3 { display: flex; align-items: center; gap: 6px; }
+#extra-privacy h3 i, #privacy-panel h3 i { width: 15px; height: 15px; color: var(--a1); }
+/* Maximum privacy quick switch */
+.privacy-max { display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:left; padding:8px 10px; cursor:pointer; }
+.privacy-max .pm-text b { display:block; font-size:12px; }
+.privacy-max .pm-text small { display:block; color:var(--ink-3); font-size:10.5px; }
+.pm-sw { position:relative; width:36px; height:20px; flex:none; border-radius:999px; background:var(--card-2); transition:background .2s; }
+.pm-sw::before { content:""; position:absolute; left:3px; top:3px; width:14px; height:14px; border-radius:50%; background:#c8cdda; transition:transform .25s cubic-bezier(.3,1.6,.5,1), background .2s; }
+.privacy-max[aria-pressed="true"] { border-color:var(--a1); background:linear-gradient(120deg,color-mix(in srgb,var(--a1) 22%,var(--card)),color-mix(in srgb,var(--a2) 14%,var(--card))); }
+.privacy-max[aria-pressed="true"] .pm-sw { background:linear-gradient(135deg,var(--a1),var(--a2)); }
+.privacy-max[aria-pressed="true"] .pm-sw::before { transform:translateX(16px); background:#fff; }
+
+.privacy-every { border: 1px solid color-mix(in srgb, var(--a1, #9b74ff) 35%, transparent); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; }
+.privacy-link { background: none; border: 0; padding: 0; color: var(--a1, #9b74ff); font: inherit; cursor: pointer; text-decoration: underline; }
+.privacy-link:disabled { opacity: .5; cursor: default; }

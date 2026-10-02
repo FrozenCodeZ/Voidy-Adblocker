@@ -1,0 +1,23 @@
+{
+  "supplementalSecurity": [
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["ppoi.org","coinhive.com","coin-hive.com","cryptoloot.org","afminer.com","minemytraffic.com","fastpool.xyz","cpu.js.org","hashforcash.us"],"domainType":"thirdParty","resourceTypes":["script","xmlhttprequest","websocket","other"]}}
+  ],
+  "supplementalAds": [
+    {"priority":5,"action":{"type":"redirect","redirect":{"extensionPath":"/surrogates/empty.json"}},"condition":{"requestDomains":["cdn-media.brightline.tv"],"resourceTypes":["xmlhttprequest"]}},
+    {"priority":3,"action":{"type":"block"},"condition":{"regexFilter":"^https?://[^/]+/(?:[^?#]*/)?(?:ads|pagead)\\.js(?:[?#].*)?$","resourceTypes":["script"]}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["adservice.google.com","mads.amazon.com","ads.youtube.com","ads.pinterest.com","ads-fa.spotify.com","ads-sp.spotify.com","ad-content.spotify.com","adeventtracker.spotify.com","ads.tritondigital.com","adserver.tritondigital.com"]}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["admob.com","vungle.com","chartboost.com","mintegral.com","rayjump.com","mobvista.com","adswizz.com","adsfs.oppomobile.com"],"domainType":"thirdParty"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["indexexchange.com","juicyads.com"],"domainType":"thirdParty","resourceTypes":["script","xmlhttprequest","image","sub_frame","ping","other"]}}
+  ],
+  "supplementalPrivacy": [
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["click.googleanalytics.com","metrika.yandex.com","connect.facebook.net","staticxx.facebook.com","alb.reddit.com","events.reddit.com","events.redditmedia.com","q.quora.com"]}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["pendo.io","piwik.pro"],"domainType":"thirdParty"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"urlFilter":"||redditstatic.com/ads/pixel.js"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"urlFilter":"||facebook.com/tr/"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"urlFilter":"||graph.facebook.com/","resourceTypes":["ping"],"domainType":"thirdParty"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["adsapi.snapchat.com","launches.appsflyer.com","control.adjust.com","device-metrics-us.amazon.com","unagi-na.amazon.com"],"domainType":"thirdParty"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["watson.telemetry.microsoft.com","oca.telemetry.microsoft.com","settings-win.data.microsoft.com","notes-analytics-events.apple.com","weather-analytics-events.apple.com","books-analytics-events.apple.com","app-measurement.com","data.mistat.xiaomi.com","data.mistat.rus.xiaomi.com","data.mistat.india.xiaomi.com","tracking.rus.miui.com","iot-eu-logser.realme.com","iot-logser.realme.com"],"domainType":"thirdParty"}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["cdn.ravenjs.com","browser.sentry-cdn.com","usage.trackjs.com","api.raygun.io","cdn.raygun.io","api.honeybadger.io","js.honeybadger.io"],"domainType":"thirdParty","resourceTypes":["script","xmlhttprequest","ping","other"]}},
+    {"priority":3,"action":{"type":"block"},"condition":{"requestDomains":["open.convertkit.com","clicks.aweber.com","pixel.aweber.com","pi.pardot.com","click.mailerlite.com"],"domainType":"thirdParty"}}
+  ]
+}
