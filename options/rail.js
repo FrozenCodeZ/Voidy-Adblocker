@@ -57,7 +57,7 @@
       stat: async () => { const s = await settings(); const x = (s && s.extraPrivacy) || {}, on = ["webrtc", "ipv6", "prefetch", "cookies"].filter((k) => x[k]).length;
         const every = { strong: "Extra", maximum: "Maximum" }[s && s.fingerprintDefault];
         return [on + Object.keys((s && s.fingerprintSites) || {}).length + (every ? 1 : 0), "extra protections switched on",
-          `${every ? "every site: " + every + " · " : ""}${on} for all of Chrome · ${Object.keys((s && s.fingerprintSites) || {}).length} per-site`]; },
+          `${every ? "every site: " + every + " · " : ""}${on} for the whole browser · ${Object.keys((s && s.fingerprintSites) || {}).length} per-site`]; },
       risks: ["Global Privacy Control is a request, not a wall: sites that ignore it (many do outside California and a few other places) still see you. It also tells sites one more small fact about your browser.",
         "Fingerprint protection can confuse captchas, bank fraud checks and video calls. Turn it off for that site if something acts up.",
         "WebRTC IP protection can break video calls in the browser (Meet, Discord, Teams).",

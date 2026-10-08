@@ -392,7 +392,7 @@ async function loadProtectionCheck() {
     [fresh, "Block lists up to date", listNote, "filters"],
     [g.enabled !== false, "Redirect Guard", "Surprise redirects and pop-ups held", "guard"],
     [!!x.webrtc, "WebRTC IP protection", "Stops video-call features revealing your IP", "privacy"],
-    [!!x.cookies, "Third-party cookies blocked", "Chrome-wide; can log you out of some embeds", "privacy"],
+    [!!x.cookies, "Third-party cookies blocked", "Browser-wide; can log you out of some embeds", "privacy"],
     [strict > 0, "Strict script controls", strict ? `On for ${strict} site${strict > 1 ? "s" : ""}` : "Optional, per site in the popup", null],
   ];
   const ul = $("pcheck"); if (!ul) return; ul.innerHTML = "";

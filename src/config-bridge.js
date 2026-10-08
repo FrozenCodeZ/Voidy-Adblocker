@@ -20,7 +20,9 @@
     try { const a = new Uint32Array(4); crypto.getRandomValues(a); return Array.from(a, (x) => x.toString(36)).join(""); }
     catch (e) { return String(Math.random()).slice(2) + Date.now(); }
   })();
-  try { document.dispatchEvent(new CustomEvent("voidy:hello", { detail: { nonce } })); } catch (e) {}
+  // Firefox walls off objects made here from page scripts unless they are copied into the page.
+  const toPage = (o) => (typeof cloneInto === "function" ? cloneInto(o, document.defaultView) : o);
+  try { document.dispatchEvent(new CustomEvent("voidy:hello", { detail: toPage({ nonce }) })); } catch (e) {}
   // Every later message uses an event name derived from the secret: a
   // page can't listen for a name it can't know, so it can neither detect us
   // by our events nor read the secret out of them. Only "hello" is fixed, and
@@ -55,11 +57,13 @@
   // so pages can't probe for Voidy's files; its replies come from the extension's
   // own origin, which the guard checks too.
   let frameUrl = "", extOrigin = "";
-  try { frameUrl = chrome.runtime.getURL("guard/guard-frame.html"); extOrigin = "chrome-extension://" + chrome.runtime.id; } catch (e) {}
+  // (Firefox has no dynamic URLs: there the origin is simply that of getURL.)
+  try { frameUrl = chrome.runtime.getURL("guard/guard-frame.html");
+        extOrigin = frameUrl.startsWith("chrome-extension://") ? "chrome-extension://" + chrome.runtime.id : new URL(frameUrl).origin; } catch (e) {}
   config.then((cfg) => {
     const main = { level: cfg.level, guard: cfg.guard, sensitive: cfg.sensitive, auto: cfg.auto,
                    notifGuard: !!(cfg.annoy && cfg.annoy.notifications), frameUrl, extOrigin, nonce };
-    try { document.dispatchEvent(new CustomEvent(ev("config"), { detail: main })); } catch (e) {}
+    try { document.dispatchEvent(new CustomEvent(ev("config"), { detail: toPage(main) })); } catch (e) {}
   });
 
   // Relay events from the MAIN world — only if they carry the secret.

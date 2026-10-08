@@ -4,11 +4,18 @@
 // switch and site mode permit.
 //  1. Remove ad scheduling from player data; keep video, captions and state.
 //  2. When ad data is missing, YouTube's video server makes the player wait
-//     ~4 s. Player requests that carry a fresh activity time and a
-//     player-params value are answered without that wait, so player requests
-//     are sent that way, and a first page load that had ads planned reloads
-//     its video once through the player (about half a second).
+//     ~4 s or more. Player requests that carry a player-params value and a
+//     large "time since last activity" (hours) are answered without that
+//     wait, so player requests are sent that way, and a first page load that
+//     had ads planned reloads its video once through the player. The large
+//     activity value also makes YouTube send its "Video paused. Continue
+//     watching?" prompt; that prompt is kept only when the viewer's real
+//     activity time, as YouTube would have sent it, has reached the prompt's
+//     own threshold.
 //  3. Pages can't sidestep this by borrowing a clean fetch from a new frame.
+//  4. When the player notices its ad data is gone, it raises an
+//     "abnormality" event and the page answers with the "Ad blockers are not
+//     allowed" wall. Listeners for that one event are dropped.
 (() => {
   "use strict";
   const apply = Reflect.apply;
@@ -63,14 +70,36 @@
     write(originals, replacement, d.get);
     define(object, key, { ...d, get: replacement });
   }
+  // A Request's own "url" or "method" can be redefined by the page (YouTube
+  // does this to test blockers: a local data: request labelled as a player
+  // request). Read what the browser will really fetch.
+  const requestGetter = (key) => { try { return typeof Request === "function" ? descriptor(Request.prototype, key).get : null; } catch (_) { return null; } };
+  const nativeUrl = requestGetter("url"), nativeMethod = requestGetter("method");
+  const requestUrl = (r) => nativeUrl ? apply(nativeUrl, r, []) : r.url;
+  const requestMethod = (r) => nativeMethod ? apply(nativeMethod, r, []) : r.method;
+  function addressOf(input) {
+    if (typeof input === "string") return input;
+    if (input instanceof URL) return input.href;
+    if (typeof Request === "function" && input instanceof Request) return requestUrl(input);
+    return String(input);
+  }
   function target(input) {
     try {
-      const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, location.href);
+      const url = new URL(addressOf(input), location.href);
       if (!/^https?:$/.test(url.protocol)) return false;
       const host = url.hostname;
       const trusted = ["youtube.com", "youtube-nocookie.com", "youtubekids.com"].some(h => host === h || host.endsWith("." + h)) || host === "youtubei.googleapis.com";
       return trusted && /^\/youtubei\/v1\/(?:player|get_watch|next|reel\/reel_watch_sequence)\/?$/.test(url.pathname);
     } catch (_) { return false; }
+  }
+
+  // Video id -> the real "time since last activity" each edited player request
+  // would have sent (see part 2). Bounded: only recent videos matter.
+  const realIdle = new Map();
+  function rememberIdle(videoId, value) {
+    if (typeof videoId !== "string" || !videoId) return;
+    realIdle.delete(videoId); realIdle.set(videoId, Number.isFinite(Number(value)) ? Number(value) : -1);
+    if (realIdle.size > 50) realIdle.delete(realIdle.keys().next().value);
   }
 
   // Walk only known response containers. Long arrays, frozen data and cycles
@@ -113,11 +142,26 @@
         const filtered = entries.value.filter(entry => entry?.command?.reelWatchEndpoint?.adClientParams?.isAd !== true);
         if (filtered.length !== entries.value.length) { try { o.entries = filtered; changed = true; } catch (_) {} }
       }
+      // "Video paused. Continue watching?" arrives in the player data's
+      // messages. For a video whose request Voidy edited, keep it only if the
+      // real activity time had reached the prompt's threshold, which is what
+      // YouTube itself checks before showing it.
+      const messages = descriptor(o, "messages");
+      const real = realIdle.get(o.videoDetails?.videoId);
+      if (real !== undefined && messages && messages.writable && Array.isArray(messages.value)) {
+        const kept = messages.value.filter(m => {
+          const data = m?.youThereRenderer?.configData?.youThereData;
+          if (!m?.youThereRenderer) return true;
+          const threshold = Number(data?.lactThresholdMs);
+          return Number.isFinite(threshold) && real >= threshold;
+        });
+        if (kept.length !== messages.value.length) { try { o.messages = kept; changed = true; } catch (_) {} }
+      }
     }
     return changed;
   }
   function cleanText(text) {
-    if (typeof text !== "string" || text.length > MAX_TEXT || !new RegExp('"(?:' + config().adKeys.join("|") + '|isAd|playerResponse)"').test(text)) return text;
+    if (typeof text !== "string" || text.length > MAX_TEXT || !new RegExp('"(?:' + config().adKeys.join("|") + '|isAd|playerResponse|youThereRenderer)"').test(text)) return text;
     try {
       const data = apply(parse, JSON, [text]);
       return clean(data) ? apply(stringify, JSON, [data]) : text;
@@ -178,8 +222,13 @@
     const request = data.playerRequest && typeof data.playerRequest === "object" ? data.playerRequest : data;
     const c = config();
     if (!request.params && c.playerParams) request.params = c.playerParams;
+    // lactMilliseconds is the time since the viewer last touched the page.
+    // The real value is remembered for the "still watching?" check above.
     const playback = request.playbackContext?.contentPlaybackContext;
-    if (c.freshActivityTime && playback && typeof playback === "object") playback.lactMilliseconds = String(Date.now());
+    if (c.freshActivityTime && playback && typeof playback === "object") {
+      rememberIdle(request.videoId, playback.lactMilliseconds);
+      playback.lactMilliseconds = String(Date.now());
+    }
     return true;
   }
   const through = (bytes, stream) => new NativeResponse(new NativeBlob([bytes]).stream().pipeThrough(stream)).arrayBuffer();
@@ -279,7 +328,7 @@
   }
   method(window, "fetch", original => ({ fetch(input, init) {
     // 2. edit player requests (a Request object's body is read, edited and rebuilt)
-    if (NativeRequest && input instanceof NativeRequest && input.method === "POST" && isPlayerRequest(input.url)) {
+    if (NativeRequest && input instanceof NativeRequest && requestMethod(input) === "POST" && isPlayerRequest(requestUrl(input))) {
       const self = this, rest = [...arguments].slice(1);
       return apply(NativeRequest.prototype.clone, input, []).arrayBuffer().then(async buffer => {
         let body = null;
@@ -287,7 +336,7 @@
         return filtered(apply(original, self, [body ? new NativeRequest(input, { body }) : input, ...rest]), input);
       }, () => filtered(apply(original, self, arguments), input));
     }
-    if (typeof init?.body === "string" && isPlayerRequest(typeof input === "string" ? input : input?.url)) {
+    if (typeof init?.body === "string" && isPlayerRequest(addressOf(input))) {
       arguments[1] = { ...init, body: editPlayerText(init.body) };
     }
     return filtered(apply(original, this, arguments), input);
@@ -354,5 +403,30 @@
       if (node && (node instanceof HTMLFrame || node.firstElementChild)) shareFetch(node);
       return result;
     } })[key]);
+  }
+
+  // ---- 4. no "abnormality" wall ---------------------------------------------
+  // The player gives its element its own addEventListener by plain assignment
+  // (element.addEventListener = fn). An accessor on the element prototype sees
+  // that assignment, stores the same function with one change: a listener for
+  // "onAbnormalityDetected" is not added. Every other element and event keeps
+  // the browser's own method.
+  const ABNORMAL = "onAbnormalityDetected";
+  const ElementProto = typeof HTMLElement === "function" ? HTMLElement.prototype : null;
+  const nativeListen = typeof EventTarget === "function" ? EventTarget.prototype.addEventListener : null;
+  if (ElementProto && nativeListen && !descriptor(ElementProto, "addEventListener")) {
+    const skipAbnormal = (listen) => {
+      const replacement = { addEventListener(type) { if (type === ABNORMAL) return; return apply(listen, this, arguments); } }.addEventListener;
+      try { define(replacement, "length", { value: listen.length }); write(originals, replacement, listen); } catch (_) {}
+      return replacement;
+    };
+    const access = descriptor({
+      get addEventListener() { return nativeListen; },
+      set addEventListener(value) {
+        define(this, "addEventListener", { configurable: true, enumerable: true, writable: true,
+          value: typeof value === "function" && value !== nativeListen ? skipAbnormal(value) : value });
+      },
+    }, "addEventListener");
+    try { define(ElementProto, "addEventListener", { configurable: true, enumerable: true, get: access.get, set: access.set }); } catch (_) {}
   }
 })();

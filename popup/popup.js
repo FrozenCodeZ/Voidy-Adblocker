@@ -4,7 +4,7 @@
 const $ = (id) => document.getElementById(id);
 const DONATE_URL = "https://buymeacoffee.com/FrozenCodeZ";
 const FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdnOw3Pi8i2pA7U8xYF5TbeR8ogY5amwuTUmn8jpnRejN-NTA/viewform";
-const FILE_BUILD_VERSION = "1.0.0";
+const FILE_BUILD_VERSION = "1.0.2";
 const ORDER = ["off", "lite", "full"];
 const LADDER = ["off", "lite", "full", "stealth1", "stealth2", "stealth3"];  // mirrors background.js's ladder
 const HINTS = {
@@ -285,7 +285,7 @@ async function copyReport() {
   const r = data || {};
   const top = (r.pageTop || []).map((d) => `  ${d.domain} (${d.catName || d.ourCat}, ${d.count}×)`).join("\n") || "  (nothing blocked on this page)";
   const text = [`Site: ${host}`, `Voidy ${chrome.runtime.getManifest().version} · mode ${r.mode || "?"} (running as ${r.level || "?"})`,
-    `Browser: ${(navigator.userAgent.match(/Chrome\/[\d.]+/) || ["Chrome"])[0]}`, "Blocked on this page:", top, "", "What went wrong (please describe):", ""].join("\n");
+    `Browser: ${(((ua) => ua.match(/Firefox\/[\d.]+/) || ua.match(/Edg\/[\d.]+/) || ua.match(/OPR\/[\d.]+/) || ua.match(/Chrome\/[\d.]+/))(navigator.userAgent) || ["unknown"])[0]}`, "Blocked on this page:", top, "", "What went wrong (please describe):", ""].join("\n");
   let copied = false;
   try { await navigator.clipboard.writeText(text); copied = true; } catch (_) {}
   const note = $("report-note");
@@ -426,7 +426,7 @@ async function startPicker() {
   try {
     await chrome.scripting.executeScript({ target: { tabId }, files: ["src/picker.js"] });
     window.close();
-  } catch (e) { VOIDY.say("Voidy can't reach into this page.<br><small>Chrome blocks extensions on some pages.</small>"); }
+  } catch (e) { VOIDY.say("Voidy can't reach into this page.<br><small>Browsers block extensions on some pages.</small>"); }
 }
 // ---- per-site script & connection controls --------------------------------
 function showSiteControls() {

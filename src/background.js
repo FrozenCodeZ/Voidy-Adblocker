@@ -23,6 +23,13 @@ const AUTO_POLICY_VERSION = 2;
 const CATEGORIES = ["ads", "privacy", "security"];               // filter toggles (and our own static ruleset ids)
 // Built from EasyList, EasyPrivacy and HaGeZi by tools/build_static_rules.py (see THIRD-PARTY-NOTICES.md).
 const STATIC_RULESETS = { ads: ["ads"], privacy: ["privacy"], security: ["security"] };
+// Firefox allows only 5,000 dynamic rules, so its build ships the list rules that never
+// vary per site as extra static rulesets: "list-<category>", and "list-ads-fixed" for the
+// ads rules that apply even on Stealth sites. The Chrome build has none of them.
+const MANIFEST_RULESETS = new Set((() => { try { return (chrome.runtime.getManifest().declarative_net_request.rule_resources || []).map((r) => r.id); } catch (e) { return []; } })());
+for (const [id, cat] of [["list-easyprivacy", "privacy"], ["list-popups", "ads"], ["list-ads-fixed", "ads"]])
+  if (MANIFEST_RULESETS.has(id)) STATIC_RULESETS[cat].push(id);
+const ADS_FIXED_STATIC = MANIFEST_RULESETS.has("list-ads-fixed");
 const RULESET_CAT = {};
 for (const [cat, ids] of Object.entries(STATIC_RULESETS)) for (const id of ids) RULESET_CAT[id] = cat;
 function staticCat(rulesetId) { return RULESET_CAT[rulesetId] || null; }
@@ -37,7 +44,8 @@ const PRIO = { SHIELD_ALLOW: 50, MALWARE: 60, REDIRECT: 100, OFF_ALLOW: 200, PRO
 const IDBASE = { OFF: 1, SURROGATE: 10000, FAKESUCCESS: 20000, SHIELD: 30000, MALWARE: 40000, LIST: 100000 };
 // Rules for list domains that are newer than the bundled copy (src/list-updates.js).
 const FRESH_IDS = { block: { security: 60000, ads: 61000, privacy: 62000 }, warn: 63000 };
-importScripts("list-updates.js", "lookalike.js");
+// Chrome loads the helpers here; Firefox lists them before this file in the manifest.
+if (typeof importScripts === "function") importScripts("list-updates.js", "lookalike.js");
 
 // Annoyance categories (list names from tools/build_lists.py). "ads" and
 // "popups" are ad categories; they follow the Ads filter toggle instead.
@@ -131,7 +139,7 @@ async function setBrowserPrivacy(key,enabled) {
   if (!chrome.permissions || !await chrome.permissions.contains({permissions:["privacy"]})) return enabled ? {ok:false,error:"Allow the optional privacy permission first."} : {ok:true};
   try {
     const [section,name,value]=BROWSER_PRIVACY[key],setting=chrome.privacy?.[section]?.[name];
-    if(!setting)return {ok:false,error:"This Chrome setting is unavailable."};
+    if(!setting)return {ok:false,error:"This browser doesn't offer this setting."};
     const current=await privacyCall(setting,"get",{});
     if (enabled && !["controllable_by_this_extension","controlled_by_this_extension"].includes(current.levelOfControl)) return {ok:false,error:"This setting is controlled by another extension or browser policy."};
     if(enabled) await privacyCall(setting,"set",{value,scope:"regular"});
@@ -344,8 +352,19 @@ async function dynamicRuleIds() {
 }
 async function changeRules(opts) {
   const ids = await dynamicRuleIds();
-  try { await chrome.declarativeNetRequest.updateDynamicRules(opts); }
-  catch (e) { ruleIds = null; throw e; }
+  for (let tries = 0; ; tries++) {
+    try { await chrome.declarativeNetRequest.updateDynamicRules(opts); break; }
+    catch (e) {
+      // Firefox checks every domain and rejects the whole batch over one malformed list
+      // entry (Chrome lets it through). Its error names the entry: drop it and try again.
+      // A rule whose list would become empty is dropped too, so it can't widen to match all.
+      const m = tries < 25 && /addRules\.(\d+)\.condition\.(\w+)\.(\d+)/.exec(String(e && e.message));
+      const rule = m && opts.addRules && opts.addRules[+m[1]], list = rule && rule.condition && rule.condition[m[2]];
+      if (!Array.isArray(list)) { ruleIds = null; throw e; }
+      rule.condition[m[2]] = list.filter((_, i) => i !== +m[3]);
+      if (!rule.condition[m[2]].length) opts = { ...opts, addRules: opts.addRules.filter((r) => r !== rule) };
+    }
+  }
   for (const id of opts.removeRuleIds || []) ids.delete(id);
   for (const r of opts.addRules || []) ids.add(r.id);
 }
@@ -459,9 +478,26 @@ async function reconcileDynamicRulesNow() {
   const youtubeScript=pageScriptPlan(state).find(s=>s.id==="voidy-yt-cosmetic");
   if(youtubeScript){
     const domains=patterns=>patterns.map(p=>p.replace(/^\*:\/\/\*\./,"").replace(/\/\*$/,""));
+    const scope={initiatorDomains:domains(youtubeScript.matches),
+      ...(youtubeScript.excludeMatches?.length?{excludedInitiatorDomains:domains(youtubeScript.excludeMatches)}:{})};
     addRules.push({id:55000,priority:PRIO.REDIRECT+2,action:{type:"redirect",redirect:{extensionPath:"/surrogates/youtube-status.js"}},condition:{
-      regexFilter:"^https?://static\\.doubleclick\\.net/instream/ad_status\\.js(\\?.*)?$",resourceTypes:["script"],initiatorDomains:domains(youtubeScript.matches),
-      ...(youtubeScript.excludeMatches?.length?{excludedInitiatorDomains:domains(youtubeScript.excludeMatches)}:{})
+      regexFilter:"^https?://static\\.doubleclick\\.net/instream/ad_status\\.js(\\?.*)?$",resourceTypes:["script"],...scope
+    }});
+  }
+  // YouTube scores whether its ad-ID request was answered and sends that score
+  // along with each video; a blocked request counts as "ad blocker found", and
+  // repeated scores lead to the "Ad blockers are not allowed" wall. Answer it
+  // here with an empty reply: nothing reaches Google either way. Network rules,
+  // so they follow the Ads filter in Lite too; Off's allow rules outrank them.
+  if(state.filters.ads){
+    const youtube={initiatorDomains:["youtube.com","youtube-nocookie.com","youtubekids.com"]};
+    addRules.push({id:55001,priority:PRIO.REDIRECT+2,action:{type:"redirect",redirect:{extensionPath:"/surrogates/empty.txt"}},condition:{
+      urlFilter:"||googleads.g.doubleclick.net/pagead/id",resourceTypes:["xmlhttprequest","other"],...youtube
+    }});
+    // YouTube's activity log, which also carries the player's own ad-check
+    // reports. Video, history and recommendations don't use it.
+    addRules.push({id:55002,priority:PRIO.REDIRECT+2,action:{type:"block"},condition:{
+      urlFilter:"||youtube.com/youtubei/v1/log_event",...youtube
     }});
   }
   const fingerprintHosts = Object.keys(state.fingerprintSites).filter(h=>fingerprintPolicy(state.fingerprintSites[h]).collectors && HOST_RE.test(h) && effectiveLevel(state,h)!=="off");
@@ -749,7 +785,7 @@ async function reconcileListRulesNow(stateArg) {
   const intersectDomains = (a, b) => [...new Set(a.flatMap(x => b.flatMap(y =>
     x === y || x.endsWith("." + y) ? [x] : y.endsWith("." + x) ? [y] : [])))];
   for (const cat of LIST_CATS) {
-    const on = cat in plan;
+    const on = cat in plan && !MANIFEST_RULESETS.has("list-" + cat);   // a static copy (Firefox build) replaces it
     const sig = on ? JSON.stringify({ v, exclude: plan[cat], ...(cat === "ads" ? { defaultStealth, genericHosts } : {}) }) : "";
     const have = presentByCat[cat] || [];
     if (on && sig === (listSigs[cat] || "") && have.length) {
@@ -767,6 +803,7 @@ async function reconcileListRulesNow(stateArg) {
     let id = listBase(cat);
     for (const r of src) {
       if (budget <= 0 || id >= listBase(cat) + LIST_BLOCK) break;
+      if (cat === "ads" && ADS_FIXED_STATIC && !stealthSkips(r)) continue;   // shipped in list-ads-fixed
       const cond = { ...r.condition };
       if (cat === "ads" && defaultStealth && stealthSkips(r)) {
         const included = cond.initiatorDomains ? intersectDomains(cond.initiatorDomains, genericHosts) : genericHosts;
@@ -950,6 +987,16 @@ async function saveAuto(host, entry) {
   await chrome.storage.local.set({ autoState });
 }
 async function reloadTab(tabId) { if (tabId != null && tabId >= 0) { try { await chrome.tabs.reload(tabId); } catch (e) {} } }
+// Automatic reloads (after Auto climbs) only when the tab is still on, or still heading to,
+// the site that asked for it. Otherwise a late reload would pull the user back from the
+// page they just moved to.
+async function reloadTabIfOn(tabId, host) {
+  if (tabId == null || tabId < 0) return;
+  try {
+    const tab = await chrome.tabs.get(tabId), h = new URL(tab.pendingUrl || tab.url).hostname;
+    if (h === host || h.endsWith("." + host)) await chrome.tabs.reload(tabId);
+  } catch (e) {}
+}
 
 // Auto state is stored as one map and rules are replaced as one set. Serialize
 // decisions across hosts too, so simultaneous tabs cannot overwrite each other.
@@ -995,7 +1042,7 @@ async function onDetected(host, tabId, signal, pageLevel) {
       a.trialing = false;
       if (a.trialFrom) { a.level = a.trialFrom; delete a.trialFrom; a.lastClimbTs = Date.now(); a.fresh = true;
         await saveAuto(host, a); await reconcileDynamicRules();
-        await logEvent({ kind: "retry-failed", host, to: a.level, signal }); await reloadTab(tabId); return; }
+        await logEvent({ kind: "retry-failed", host, to: a.level, signal }); await reloadTabIfOn(tabId, host); return; }
     }
     const maxIdx = Math.max(LADDER.indexOf(state.autoMax), LADDER.indexOf(a.manualMax));
     const ceilIdx = a.ceiling ? LADDER.indexOf(a.ceiling) : maxIdx;
@@ -1009,7 +1056,7 @@ async function onDetected(host, tabId, signal, pageLevel) {
       await reconcileDynamicRules();
       await logEvent({ kind: "climb", host, to: a.level, signal });
       await loadStats(); life.totals.climbs = (life.totals.climbs || 0) + 1; scheduleFlush();
-      await reloadTab(tabId);
+      await reloadTabIfOn(tabId, host);
     } else if (!libOnly && !a.askShown) {
       a.askShown = true;
       await saveAuto(host, a);
@@ -1335,8 +1382,22 @@ function guessBlockedCategory(host) {
 // on store installs also which sites were blocked (unpacked copies get that from
 // the detailed events above).
 if (chrome.webRequest && chrome.webRequest.onErrorOccurred) {
+  // Firefox reports a block as "NS_ERROR_ABORT" before the request ever sends its headers;
+  // requests a page cancels itself fail later, with other errors. So on Firefox a request
+  // counts only if it failed that way before reaching onSendHeaders.
+  const FIREFOX = (() => { try { return chrome.runtime.getURL("").startsWith("moz-extension://"); } catch (e) { return false; } })();
+  const sentHeaders = new Set();
+  if (FIREFOX) {
+    const ALL = { urls: ["http://*/*", "https://*/*", "ws://*/*", "wss://*/*"] };
+    chrome.webRequest.onSendHeaders.addListener((d) => { sentHeaders.add(d.requestId); }, ALL);
+    chrome.webRequest.onCompleted.addListener((d) => { sentHeaders.delete(d.requestId); }, ALL);
+  }
+  const firefoxBlocked = (d) => {
+    const sent = sentHeaders.delete(d.requestId);
+    return FIREFOX && d.error === "NS_ERROR_ABORT" && !sent;
+  };
   chrome.webRequest.onErrorOccurred.addListener(async (d) => {
-    if (d.error !== "net::ERR_BLOCKED_BY_CLIENT") return;
+    if (d.error !== "net::ERR_BLOCKED_BY_CLIENT" && !firefoxBlocked(d)) return;
     const host = hostOf(d.url);
     if (!host) return;
     await loadStats();

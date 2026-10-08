@@ -7,7 +7,9 @@
   "use strict";
   try {
     const proto = Navigator.prototype;
-    if ("globalPrivacyControl" in proto) return;            // a browser that already has it keeps its own
+    // A browser that already sends GPC keeps its own. Firefox has the property but leaves it
+    // false unless its own setting is on, while Voidy's rule sends the header: make them agree.
+    if ("globalPrivacyControl" in proto && navigator.globalPrivacyControl === true) return;
     const getter = { get globalPrivacyControl() { return true; } };
     Object.defineProperty(proto, "globalPrivacyControl", { ...Object.getOwnPropertyDescriptor(getter, "globalPrivacyControl"), enumerable: true, configurable: true });
   } catch (_) {}
