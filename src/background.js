@@ -45,7 +45,7 @@ const IDBASE = { OFF: 1, SURROGATE: 10000, FAKESUCCESS: 20000, SHIELD: 30000, MA
 // Rules for list domains that are newer than the bundled copy (src/list-updates.js).
 const FRESH_IDS = { block: { security: 60000, ads: 61000, privacy: 62000 }, warn: 63000 };
 // Chrome loads the helpers here; Firefox lists them before this file in the manifest.
-if (typeof importScripts === "function") importScripts("list-updates.js", "lookalike.js");
+if (typeof importScripts === "function") importScripts("site-fixes.js", "fix-search.js", "mute-decision.js", "list-updates.js", "lookalike.js");
 
 // Annoyance categories (list names from tools/build_lists.py). "ads" and
 // "popups" are ad categories; they follow the Ads filter toggle instead.
@@ -78,6 +78,8 @@ const DEFAULTS = {
   shieldNetworks: {},
   autoState: {},
   gentleRetry: true,
+  sharedFixes: true,             // use the shared site fixes from Voidy's GitHub (data/site-fixes.json)
+  myFixes: {},                   // { host: { allow: [domain], noHiding?, noScripts? } } found with "Fix this site"
   annoy: DEFAULT_ANNOY,
   cookieMode: "reject",          // "reject" = click the site's own Reject button, then hide; "hide" = hide only
   widgetOff: {},                 // { host: true } -> popups & widgets allowed on that site
@@ -101,6 +103,10 @@ const GPC_RULE_ID = 58000;       // one rule that adds the Sec-GPC header; never
 // stays the same however many sites use them.
 const SITE_CONTROLS = ["scripts3p", "scriptsAll", "frames3p", "sockets3p"];
 const SITE_CONTROL_ID = 64000, SITE_CONTROL_PRIO = 150;   // above list exceptions, below "Off" (200)
+// Site fixes: shared ones from GitHub (56000+) and your own from "Fix this site"
+// (57000+). Their allow rules sit above list rules, below site controls and Off.
+const SHARED_FIX_ID = 56000, MY_FIX_ID = 57000, FIX_ALLOW_PRIO = 140;
+const FIX_TEST_ID = 900000;      // session rules of the guided search (the session-id counter stays below)
 const MY_HIDES_PER_SITE = 200;
 const THEMES = ["void", "whitehole", "nebula", "supernova", "pulsar", "aurora", "eclipse", "custom"];
 // 0.6.0 renamed the colour themes to universes; old names map to the closest one.
@@ -254,6 +260,8 @@ async function getState() {
     shieldNetworks: s.shieldNetworks || {},
     autoState: s.autoState || {},
     gentleRetry: s.gentleRetry !== false,
+    sharedFixes: s.sharedFixes !== false,
+    myFixes: s.myFixes || {},
     annoy: { ...DEFAULT_ANNOY, ...(s.annoy || {}) },
     cookieMode: s.cookieMode === "hide" ? "hide" : "reject",
     widgetOff: s.widgetOff || {},
@@ -330,6 +338,194 @@ function isSensitiveUrl(state, url) {
 }
 
 // ============================================================================
+// Your own fixes, found with "Fix this site": addresses allowed on one site
+// (never one on the malware and phishing lists).
+async function myFixRules(state) {
+  const out = [];
+  let id = MY_FIX_ID;
+  for (const [host, f] of Object.entries(state.myFixes)) {
+    if (!HOST_RE.test(host) || !f || !Array.isArray(f.allow) || id >= MY_FIX_ID + 1000) continue;
+    const safe = [];
+    for (const d of f.allow) if (HOST_RE.test(d) && !(await listedAs(d)).malware) safe.push(d);
+    if (safe.length) out.push({ id: id++, priority: FIX_ALLOW_PRIO, action: { type: "allow" }, condition: { initiatorDomains: aliasGroup(host), requestDomains: safe } });
+  }
+  return out;
+}
+
+// ---- "Fix this site": the guided search (src/fix-search.js) -----------------
+// The test lives in session storage, so it survives the worker going to sleep
+// between answers and ends when the browser closes.
+let fixTestNow = null, fixTestLoaded = false;
+async function fixTest() {
+  if (!fixTestLoaded) { fixTestNow = (await chrome.storage.session.get({ fixTest: null })).fixTest; fixTestLoaded = true; }
+  return fixTestNow;
+}
+async function saveFixTest(t) { fixTestNow = t; fixTestLoaded = true; await chrome.storage.session.set({ fixTest: t }); }
+const onSite = (site, host) => !!host && aliasGroup(site).some((h) => host === h || host.endsWith("." + h));
+// Is Voidy's page hiding (or are its page scripts) paused on this site: being tested, or your fix?
+function fixPaused(state, host, what) {
+  const t = fixTestNow;
+  if (t && t.S && !t.S.done && !t.S.failed && onSite(t.host, host) && t.S.trying.includes(what)) return true;
+  const key = what === "#hiding" ? "noHiding" : "noScripts";
+  return suffixes(host || "").some((h) => state.myFixes[h] && state.myFixes[h][key]);
+}
+const fixLabel = (item) => item === "#hiding" ? "Voidy's page hiding" : item === "#scripts" ? "Voidy's page scripts" : item;
+function fixView(t) {
+  return { state: "asking", host: t.host, tabId: t.tabId, round: t.S.rounds, of: t.S.rounds + Math.ceil(Math.log2(Math.max(1, t.S.pool.length))),
+    trying: t.S.trying, pool: t.S.pool, labels: Object.fromEntries(t.S.pool.map((c) => [c, fixLabel(c)])) };
+}
+// Let this round's half through: one session allow rule for the hosts, and the
+// page-hiding and page-script switches through fixPaused.
+async function applyFixRound(t) {
+  const old = (await chrome.declarativeNetRequest.getSessionRules()).filter((r) => r.id >= FIX_TEST_ID && r.id < FIX_TEST_ID + 100).map((r) => r.id);
+  const hosts = t && !t.S.done && !t.S.failed ? t.S.trying.filter((c) => !c.startsWith("#")) : [];
+  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: old, addRules: hosts.length ? [{ id: FIX_TEST_ID, priority: FIX_ALLOW_PRIO + 5,
+    action: { type: "allow" }, condition: { initiatorDomains: aliasGroup(t.host), requestDomains: hosts } }] : [] });
+  await syncPageScripts(await getState());
+}
+// Should this tab show the panel (a test is running on it, or its result waits)?
+async function fixPanelFor(tabId) {
+  const t = await fixTest();
+  if (t) return t.tabId === tabId;
+  const { fixResult = null } = await chrome.storage.session.get("fixResult");
+  return !!(fixResult && fixResult.tabId === tabId);
+}
+async function endFixTest(result) {
+  await saveFixTest(null);
+  await applyFixRound(null);
+  if (result) await chrome.storage.session.set({ fixResult: result }); else await chrome.storage.session.remove("fixResult");
+}
+async function startFixTest(host, tabId) {
+  await loadStats();
+  const cands = [];
+  for (const d of Object.keys(tabOf(tabId).domains)) if (HOST_RE.test(d) && !(await listedAs(d)).malware) cands.push(d);
+  const t = { host, tabId, S: VOIDY_FIXSEARCH.start([...cands, "#hiding", "#scripts"]), startedAt: Date.now() };
+  await chrome.storage.session.remove("fixResult");
+  await saveFixTest(t);
+  await applyFixRound(t);
+  await reloadTab(tabId);
+  return fixView(t);
+}
+async function finishFix(t, item) {
+  const state = await getState();
+  const mine = { ...(state.myFixes[t.host] || {}) };
+  if (item === "#hiding") mine.noHiding = true;
+  else if (item === "#scripts") mine.noScripts = true;
+  else mine.allow = [...new Set([...(mine.allow || []), item])];
+  await chrome.storage.local.set({ myFixes: { ...state.myFixes, [t.host]: mine } });
+  const result = { state: "found", host: t.host, tabId: t.tabId, item, label: fixLabel(item) };
+  await endFixTest(result);
+  await reconcileDynamicRules();
+  await logEvent({ kind: "fixFound", host: t.host, item: fixLabel(item) });
+  await reloadTab(t.tabId);
+  return result;
+}
+async function answerFixTest(works) {
+  const t = await fixTest();
+  if (!t) return null;
+  const S = VOIDY_FIXSEARCH.answer(t.S, !!works);
+  if (S.done) return finishFix(t, S.culprit);
+  if (S.failed) {
+    const result = { state: "failed", host: t.host, tabId: t.tabId };
+    await endFixTest(result); await reloadTab(t.tabId);
+    return result;
+  }
+  const next = { ...t, S };
+  await saveFixTest(next); await applyFixRound(next); await reloadTab(t.tabId);
+  return fixView(next);
+}
+async function removeMyFix(host, item) {
+  const state = await getState();
+  const mine = { ...(state.myFixes[host] || {}) };
+  if (item === "#hiding") delete mine.noHiding;
+  else if (item === "#scripts") delete mine.noScripts;
+  else mine.allow = (mine.allow || []).filter((d) => d !== item);
+  if (mine.allow && !mine.allow.length) delete mine.allow;
+  const all = { ...state.myFixes };
+  if (Object.keys(mine).length) all[host] = mine; else delete all[host];
+  await chrome.storage.local.set({ myFixes: all });
+  await reconcileDynamicRules(); await syncPageScripts(await getState());
+}
+// The test ends when its tab closes or leaves the site.
+chrome.tabs.onRemoved.addListener(async (tabId) => { const t = await fixTest(); if (t && t.tabId === tabId) await endFixTest(null); });
+chrome.tabs.onUpdated.addListener(async (tabId, info) => {
+  if (!info.url) return;
+  const t = await fixTest();
+  if (t && t.tabId === tabId && /^https?:/.test(info.url) && !onSite(t.host, hostOf(info.url))) await endFixTest(null);
+});
+
+// Shared site fixes (data/site-fixes.json, refreshed from GitHub; see
+// src/site-fixes.js). The entry for a host or the nearest parent that has one,
+// or null when shared fixes are switched off or the site is set to Off.
+async function sharedFixFor(state, host) {
+  if (!state.sharedFixes || !host || effectiveLevel(state, host) === "off") return null;
+  const { sites } = await LIST_UPDATES.fixes();
+  for (const h of suffixes(host)) if (sites[h]) return sites[h];
+  return null;
+}
+// The activity log notes a shared fix on a site at most once a day.
+const sharedFixNoted = new Map();
+async function noteSharedFix(state, host) {
+  try {
+    if (Date.now() - (sharedFixNoted.get(host) || 0) < 864e5 || !(await sharedFixFor(state, host))) return;
+    sharedFixNoted.set(host, Date.now());
+    await logEvent({ kind: "sharedFix", host });
+  } catch (e) {}
+}
+// Feed markers for src/feed-main.js: only with the Ads filter on, on a site
+// that isn't Off or Lite, and not switched off in the fixes file.
+async function feedsFor(state, host, level) {
+  if (!state.filters.ads || level === "off" || level === "lite") return null;
+  const fix = await sharedFixFor(state, host);
+  return fix && !fix.off && fix.feeds ? fix.feeds : null;
+}
+// Spotify ad muting: the page signals from the fixes file, and the mute itself.
+async function spotifyConfig(state, host) {
+  const level = effectiveLevel(state, host);
+  if (!state.filters.ads || level === "off" || level === "lite") return null;
+  const fix = await sharedFixFor(state, host);
+  return fix && !fix.off && fix.adPlaying ? { adPlaying: fix.adPlaying } : null;
+}
+async function adMute(tabId, on) {
+  const { mutedByVoidy = {} } = await chrome.storage.session.get("mutedByVoidy");
+  let tab;
+  try { tab = await chrome.tabs.get(tabId); } catch (e) { return { ok: false }; }
+  const m = tab.mutedInfo || {};
+  // another extension's mute counts as the person's: never undone by Voidy
+  const info = m.reason === "extension" && m.extensionId && m.extensionId !== chrome.runtime.id ? { ...m, reason: "other" } : m;
+  const decision = VOIDY_MUTE.muteDecision(mutedByVoidy[tabId] || null, info, on);
+  if (decision === "mute") { await chrome.tabs.update(tabId, { muted: true }); mutedByVoidy[tabId] = { byVoidy: true }; }
+  else if (decision === "unmute") { await chrome.tabs.update(tabId, { muted: false }); delete mutedByVoidy[tabId]; }
+  else if (decision === "forget") delete mutedByVoidy[tabId];
+  await chrome.storage.session.set({ mutedByVoidy });
+  return { ok: true, decision };
+}
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  const { mutedByVoidy = {} } = await chrome.storage.session.get("mutedByVoidy");
+  if (mutedByVoidy[tabId]) { delete mutedByVoidy[tabId]; await chrome.storage.session.set({ mutedByVoidy }); }
+});
+// Allow and block rules from the shared fixes. An allow never covers an address
+// on the malware and phishing lists, whatever the file says.
+async function sharedFixRules(state) {
+  if (!state.sharedFixes) return [];
+  const { sites } = await LIST_UPDATES.fixes();
+  const out = [];
+  let id = SHARED_FIX_ID;
+  for (const [host, e] of Object.entries(sites)) {
+    const initiatorDomains = aliasGroup(host);
+    if (e.allow) {
+      const safe = [];
+      for (const d of e.allow) if (!(await listedAs(d)).malware) safe.push(d);
+      if (safe.length && id < SHARED_FIX_ID + 1000) out.push({ id: id++, priority: FIX_ALLOW_PRIO, action: { type: "allow" }, condition: { initiatorDomains, requestDomains: safe } });
+    }
+    if (e.block && state.filters.ads) for (const b of e.block) {
+      if (id >= SHARED_FIX_ID + 1000) break;
+      out.push({ id: id++, priority: 4, action: { type: "block" }, condition: { initiatorDomains, urlFilter: b.urlFilter, ...(b.types ? { resourceTypes: b.types } : {}) } });
+    }
+  }
+  return out;
+}
+
 // DNR — part 1: per-site rules (off / surrogate / fake-success / shield)
 // ============================================================================
 // Every rule reconciliation reads/replaces shared DNR state. Queue updates so
@@ -500,6 +696,7 @@ async function reconcileDynamicRulesNow() {
       urlFilter:"||youtube.com/youtubei/v1/log_event",...youtube
     }});
   }
+  addRules.push(...await sharedFixRules(state), ...await myFixRules(state));
   const fingerprintHosts = Object.keys(state.fingerprintSites).filter(h=>fingerprintPolicy(state.fingerprintSites[h]).collectors && HOST_RE.test(h) && effectiveLevel(state,h)!=="off");
   if(state.filters.privacy&&FINGERPRINT_PRESETS[state.fingerprintDefault].collectors&&effectiveLevel(state,"")!=="off"){
     const skip=[...Object.keys(state.fingerprintSites).filter(h=>HOST_RE.test(h)),...[...new Set([...Object.keys(state.sites),...Object.keys(state.autoState)])].filter(h=>HOST_RE.test(h)&&effectiveLevel(state,h)==="off")].flatMap(aliasGroup);
@@ -545,10 +742,10 @@ async function reconcileDynamicRulesNow() {
 // in this project and runs only on YouTube family hosts.
 // ============================================================================
 const SCRIPTS_OFF_LEVELS = new Set(["off", "lite", "shield"]);
-const OUR_SCRIPT_IDS = /^(?:voidy-yt(?:-cosmetic)?|voidy-twitch|voidy-gpc|voidy-fingerprint(?:-[a-z0-9-]+)?)$/;
+const OUR_SCRIPT_IDS = /^(?:voidy-yt(?:-cosmetic)?|voidy-twitch|voidy-feed|voidy-spotify|voidy-gpc|voidy-fingerprint(?:-[a-z0-9-]+)?)$/;
 // Match registrations by bundled file as well as ID so upgrades retire older IDs.
 const OWNED_PAGE_SCRIPT_FILES = new Set(["src/yt-main.js", "src/yt-cosmetic.js",
-  "src/twitch-main.js", "src/gpc-main.js", "src/fingerprint-main.js"]);
+  "src/twitch-main.js", "src/feed-main.js", "src/spotify-mute.js", "src/gpc-main.js", "src/fingerprint-main.js"]);
 const siteMatch = (h) => `*://*.${h}/*`;          // the site and its subdomains, like our network rules
 function pageScriptPlan(state) {
   const hosts = new Set([...Object.keys(state.sites), ...Object.keys(state.autoState)]);
@@ -557,6 +754,9 @@ function pageScriptPlan(state) {
     if (!HOST_RE.test(h)) continue;
     (SCRIPTS_OFF_LEVELS.has(effectiveLevel(state, h)) ? offHosts : onHosts).push(...aliasGroup(h));
   }
+  // "Fix this site": page scripts paused on the site being tested, or by your fix.
+  for (const h of new Set([...(fixTestNow ? [fixTestNow.host] : []), ...Object.keys(state.myFixes)]))
+    if (HOST_RE.test(h) && fixPaused(state, h, "#scripts")) offHosts.push(...aliasGroup(h));
   const defaultOn = !SCRIPTS_OFF_LEVELS.has(effectiveLevel(state, ""));
   const widgetOff = Object.keys(state.widgetOff).filter((h) => state.widgetOff[h] && HOST_RE.test(h)).flatMap(aliasGroup);
   const out = [];
@@ -565,6 +765,10 @@ function pageScriptPlan(state) {
     { id: "voidy-yt-cosmetic", js: "src/yt-cosmetic.js", world: "ISOLATED", toggle: "ads",
       hosts: ["youtube.com", "youtube-nocookie.com", "youtubekids.com"] },
     { id: "voidy-twitch", js: "src/twitch-main.js", world: "MAIN", toggle: "ads", hosts: ["twitch.tv"] },
+    // Feed ads (src/feed-main.js); idle unless getConfig hands it feeds from the shared fixes file.
+    { id: "voidy-feed", js: "src/feed-main.js", world: "MAIN", toggle: "ads", hosts: ["facebook.com", "instagram.com", "x.com", "twitter.com"] },
+    // Spotify ad muting (src/spotify-mute.js); idle unless the fixes file names the ad signals.
+    { id: "voidy-spotify", js: "src/spotify-mute.js", world: "ISOLATED", toggle: "ads", hosts: ["open.spotify.com"] },
     // GPC is a privacy signal, not blocking: Lite sends it too. Only a site set to Off does without.
     { id: "voidy-gpc", js: "src/gpc-main.js", world: "MAIN", toggle: "gpc", hosts: ["*"], offLevels: new Set(["off"]) }];
   for (const b of all) {
@@ -670,7 +874,7 @@ async function listedAs(host) {
 // can't both compute the same "max + 1" and make the second update fail.
 let sessionIdNext = 0;
 async function nextSessionRuleId() {
-  if (!sessionIdNext) sessionIdNext = (await chrome.declarativeNetRequest.getSessionRules()).reduce((m, r) => Math.max(m, r.id), 0) + 1;
+  if (!sessionIdNext) sessionIdNext = (await chrome.declarativeNetRequest.getSessionRules()).filter((r) => r.id < FIX_TEST_ID).reduce((m, r) => Math.max(m, r.id), 0) + 1;
   return sessionIdNext++;
 }
 
@@ -936,7 +1140,10 @@ function myHideRules(state, topHost, frameHost) {
 const validHideSelector = (sel) => typeof sel === "string" && sel.length > 0 && sel.length <= 500 && !/[{}]/.test(sel);
 
 async function cosmeticInit(state, topHost, frameHost) {
+  await fixTest();
+  if (fixPaused(state, topHost, "#hiding")) return null;
   const cats = cosmeticCats(state, topHost), mine = myHideRules(state, topHost, frameHost);
+  if (cats.includes("ads")) { const fix = await sharedFixFor(state, frameHost); if (fix && fix.hide) for (const sel of fix.hide) mine.push(["ads", sel]); }
   if (!cats.length) return mine.length ? { cats, genericOff: true, rules: mine } : null;
   const d = await loadCosData();
   const catIdx = new Set(cats.map((c) => d.cats.indexOf(c)));
@@ -1660,13 +1867,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     }
     if (msg.type === "getMode") { sendResponse({ mode: effectiveLevel(state, topHost) }); return; }
     if (msg.type === "getConfig") {
-      const level = effectiveLevel(state, topHost);
+      await fixTest();
+      const scriptsPaused = fixPaused(state, topHost, "#scripts");
+      const level = scriptsPaused ? "lite" : effectiveLevel(state, topHost);
       const top = sender.frameId === 0;
-      if (top) maybeGentleRetry(topHost);
+      if (top) { maybeGentleRetry(topHost); noteSharedFix(state, topHost); }
       const cats = cosmeticCats(state, topHost);
       sendResponse({
         level,
-        guard: { ...state.guard, enabled: guardOn(state, topHost),
+        guard: { ...state.guard, enabled: guardOn(state, topHost) && !scriptsPaused,
                  fakePopup: state.guard.fakePopups === "always" || (state.guard.fakePopups !== "never" && /^stealth[123]$/.test(level)) },
         sensitive: isSensitiveUrl(state, sender.url) || isSensitiveUrl(state, msg.topUrl || ""),
         lookalike: top ? await lookalikeFor(state, topHost) : null,
@@ -1678,7 +1887,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           notifications: cats.includes("notifications"),
           rescue: state.rescue
         },
-        cosmetic: await cosmeticInit(state, topHost, frameHost)
+        cosmetic: await cosmeticInit(state, topHost, frameHost),
+        fixPanel: top && tabId != null && await fixPanelFor(tabId),
+        feeds: await feedsFor(state, topHost, level)
       });
       return;
     }
@@ -1703,6 +1914,27 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       life.totals.hidden += ads - prev.ads;
       life.totals.annoy += annoy - prev.annoy;
       t.cos[key] = { ads, annoy };
+      scheduleFlush();
+      sendResponse({ ok: true });
+      return;
+    }
+    if (msg.type === "spotifyConfig") { sendResponse(sender.frameId === 0 ? await spotifyConfig(state, topHost) : null); return; }
+    if (msg.type === "adMute") {
+      if (tabId == null || sender.frameId !== 0 || !/(^|\.)spotify\.com$/.test(frameHost) || !(await spotifyConfig(state, topHost))) { sendResponse({ ok: false }); return; }
+      sendResponse(await adMute(tabId, msg.on === true)); return;
+    }
+    if (msg.type === "feedCheck") {
+      if (tabId == null || !msg.counts || typeof msg.counts !== "object") { sendResponse({ ok: false }); return; }
+      await loadStats();
+      const t = tabOf(tabId), c = msg.counts, n = (v) => Math.max(0, Math.min(1e6, Number(v) || 0));
+      const matched = {};
+      for (const [k, v] of Object.entries(c.matched || {}).slice(0, 20)) if (/^[A-Za-z0-9_.]{1,330}$/.test(k)) matched[k] = n(v);
+      t.feedCheck = { host: topHost, replies: n(c.replies), items: n(c.items), removed: n(c.removed), matched };
+      t.cos = t.cos || {};
+      const key = sender.frameId + ":feed", prev = t.cos[key] || { ads: 0, annoy: 0 };
+      const ads = Math.max(prev.ads, Math.min(2000, n(c.removed)));
+      life.totals.hidden += ads - prev.ads;
+      t.cos[key] = { ads, annoy: 0 };
       scheduleFlush();
       sendResponse({ ok: true });
       return;
@@ -1769,6 +2001,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         widgets: widgetsOn(state, host),
         extraPrivacy: await extraPrivacyStatus(state,host),
         ytStartup:t.ytStartup||null,
+        feedCheck: t.feedCheck || null,
+        adMuted: !!(msg.tabId != null && ((await chrome.storage.session.get({ mutedByVoidy: {} })).mutedByVoidy || {})[msg.tabId]),
         ytPlayerFields:msg.includeYtFields&&/(^|\.)(youtube\.com|youtube-nocookie\.com|youtubekids\.com)$/.test(host)?await youtubePlayerFields(msg.tabId):null,
         ytMatches:Number.isFinite(t.ytOrigin)?(t.ytMatches||[]).map(m=>({
           atMs:Math.round(m.epoch-t.ytOrigin),kind:m.kind,ruleset:m.ruleset,ruleId:m.ruleId
@@ -1784,6 +2018,45 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         debugAvailable
       });
       return;
+    }
+    // ---- "Fix this site" (popup, panel and settings pages only) ----
+    if (/^(fixStart|fixAnswer|fixPick|fixStop|fixDismiss|getFixTest|listMyFixes|removeMyFix|easeOff)$/.test(msg.type) && !fromExtPage) { sendResponse({ ok: false }); return; }
+    if (msg.type === "easeOff") {                         // the panel's "Ease off on this site": one level lower, like the popup's link
+      if (!HOST_RE.test(String(msg.host || "")) || !Number.isInteger(msg.tabId)) { sendResponse({ ok: false }); return; }
+      await chrome.storage.session.remove("fixResult");
+      if (storedMode(state, msg.host) === "auto") await onBrokeAuto(msg.host, msg.tabId);
+      else {
+        const idx = LADDER.indexOf(effectiveLevel(state, msg.host));
+        await chrome.storage.local.set({ sites: { ...state.sites, [msg.host]: LADDER[Math.max(0, idx - 1)] } });
+        await reconcileDynamicRules(); await reloadTab(msg.tabId);
+      }
+      sendResponse({ ok: true }); return;
+    }
+    if (msg.type === "fixStart") {
+      if (!HOST_RE.test(String(msg.host || "")) || !Number.isInteger(msg.tabId)) { sendResponse({ ok: false }); return; }
+      sendResponse(await startFixTest(msg.host, msg.tabId)); return;
+    }
+    if (msg.type === "fixAnswer") { sendResponse(await answerFixTest(msg.works === true)); return; }
+    if (msg.type === "fixPick") {
+      const t = await fixTest();
+      sendResponse(t && t.S.pool.includes(msg.item) ? await finishFix(t, msg.item) : null); return;
+    }
+    if (msg.type === "fixStop") {
+      const t = await fixTest();
+      if (t) { await endFixTest(null); await reloadTab(t.tabId); }
+      sendResponse({ ok: true }); return;
+    }
+    if (msg.type === "fixDismiss") { await chrome.storage.session.remove("fixResult"); sendResponse({ ok: true }); return; }
+    if (msg.type === "getFixTest") {
+      const t = await fixTest();
+      if (t) { sendResponse(fixView(t)); return; }
+      const { fixResult = null } = await chrome.storage.session.get("fixResult");
+      sendResponse(fixResult); return;
+    }
+    if (msg.type === "listMyFixes") { sendResponse(state.myFixes); return; }
+    if (msg.type === "removeMyFix") {
+      if (!HOST_RE.test(String(msg.host || "")) || typeof msg.item !== "string") { sendResponse({ ok: false }); return; }
+      await removeMyFix(msg.host, msg.item); sendResponse({ ok: true }); return;
     }
     if (msg.type === "brokeAuto") { await onBrokeAuto(msg.host, msg.tabId); sendResponse({ ok: true }); return; }
     if (msg.type === "manualClimb") {
@@ -1955,6 +2228,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === "listUpdateNow") { sendResponse(await LIST_UPDATES.run({ force: true })); return; }
     if (msg.type === "listUpdateAuto") { await LIST_UPDATES.setAuto(msg.on); sendResponse(await LIST_UPDATES.status()); return; }
     if (msg.type === "setSensitiveSites") { await chrome.storage.local.set({ sensitiveSites: msg.list || [] }); sendResponse({ ok: true }); return; }
+    if (msg.type === "getSharedFixes") {
+      const { siteFixes = null, fixesCheck = {} } = await chrome.storage.local.get(["siteFixes", "fixesCheck"]);
+      sendResponse({ on: state.sharedFixes, sites: Object.keys((await LIST_UPDATES.fixes()).sites).length,
+        updated: (siteFixes && siteFixes.updated) || null, error: fixesCheck.error || "" });
+      return;
+    }
+    if (msg.type === "setSharedFixes") { await chrome.storage.local.set({ sharedFixes: !!msg.on }); await reconcileDynamicRules(); sendResponse({ ok: true }); return; }
     if (msg.type === "setGentleRetry") { await chrome.storage.local.set({ gentleRetry: !!msg.value }); sendResponse({ ok: true }); return; }
     if (msg.type === "getSettings") { sendResponse(state); return; }
     if (msg.type === "getLog") { const { log = [] } = await chrome.storage.local.get({ log: [] }); sendResponse({ log }); return; }
@@ -1983,6 +2263,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         if (clean.sites) for (const [h, m] of Object.entries(clean.sites)) if (!HOST_RE.test(h) || !MODES.includes(m)) delete clean.sites[h];
         if (clean.myHides) clean.myHides = Object.fromEntries(Object.entries(clean.myHides).filter(([h, l]) => HOST_RE.test(h) && Array.isArray(l))
           .map(([h, l]) => [h, l.filter(validHideSelector).slice(-MY_HIDES_PER_SITE)]).filter(([, l]) => l.length));
+        if (clean.myFixes) clean.myFixes = Object.fromEntries(Object.entries(clean.myFixes).filter(([h, f]) => HOST_RE.test(h) && f && typeof f === "object")
+          .map(([h, f]) => [h, { ...(Array.isArray(f.allow) && f.allow.filter((x) => HOST_RE.test(x)).length ? { allow: f.allow.filter((x) => HOST_RE.test(x)).slice(0, 50) } : {}),
+            ...(f.noHiding === true ? { noHiding: true } : {}), ...(f.noScripts === true ? { noScripts: true } : {}) }]).filter(([, f]) => Object.keys(f).length));
         if (clean.autoState && d.autoPolicyVersion !== AUTO_POLICY_VERSION) clean.autoState=migrateAutoPolicy({...d,...clean});
         clean.autoPolicyVersion=AUTO_POLICY_VERSION;
         await chrome.storage.local.set({ ...DEFAULTS, ...clean,
@@ -1998,10 +2281,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       for(const key of Object.keys(BROWSER_PRIVACY))await setBrowserPrivacy(key,false);
       // Downloaded list updates are data, not settings: keep them (the bundled
       // groups they replaced stay switched off, so dropping them would leave a gap).
-      const keep = await chrome.storage.local.get({ lifetime: null, freshLists: null, listUpdates: null, ytConfig: null });
+      const keep = await chrome.storage.local.get({ lifetime: null, freshLists: null, listUpdates: null, ytConfig: null, siteFixes: null });
       await chrome.storage.local.clear();
       await chrome.storage.local.set({ ...DEFAULTS, lifetime: keep.lifetime || emptyLife(),
         ...(keep.freshLists ? { freshLists: keep.freshLists } : {}), ...(keep.ytConfig ? { ytConfig: keep.ytConfig } : {}),
+        ...(keep.siteFixes ? { siteFixes: keep.siteFixes } : {}),
         ...(keep.listUpdates ? { listUpdates: { cats: keep.listUpdates.cats || {} } } : {}) });
       await reconcileRulesets(); await reconcileDynamicRules(); await enableBadge();
       sendResponse({ ok: true });

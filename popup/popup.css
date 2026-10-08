@@ -277,3 +277,5 @@ html.still .sup-cup .steam { opacity: .5; }
 
 /* Keep the wide black-hole wings within the support illustration column. */
 #support-voidy.form-blackhole { --vs: 52px; width: 52px; height: 47px; left: 20px; top: 8px; }
+.broke-link.small { font-size: 11px; margin-top: 2px; opacity: .8; }
+#fixbox .fixrow { display: flex; gap: 6px; margin-top: 6px; }

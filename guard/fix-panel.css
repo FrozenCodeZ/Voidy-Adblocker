@@ -1,0 +1,20 @@
+:root { --bg:#1b1f29; --card:#232835; --ink:#eef0f5; --ink2:#a9afbd; --line:rgba(255,255,255,.08); --good:#3ecf8e; --warn:#e0a31c; }
+html, body { margin: 0; background: #1b1f29; color-scheme: dark; }
+body { font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+.box { --tone: var(--a1, #8b6cff); background: var(--bg); border: 1px solid color-mix(in srgb, var(--tone) 35%, transparent);
+       border-radius: 12px; padding: 0 14px 12px; overflow: hidden; }
+.box[data-tone="good"] { --tone: var(--good); } .box[data-tone="warn"] { --tone: var(--warn); }
+.strip { height: 4px; margin: 0 -14px 10px; background: linear-gradient(90deg, var(--tone), color-mix(in srgb, var(--tone) 40%, var(--a2, #4dd6ff))); }
+.title { font-weight: 700; font-size: 14px; }
+.text { color: var(--ink2); margin: 3px 0 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; }
+button { font: inherit; font-weight: 600; border-radius: 8px; padding: 6px 12px; cursor: pointer; border: 1px solid var(--line);
+         background: var(--card); color: var(--ink); }
+button.main { background: var(--tone); color: #10131a; border-color: transparent; }
+button.link { background: none; border: 0; color: var(--ink2); padding: 6px 4px; text-decoration: underline; }
+button:disabled { opacity: .55; cursor: default; }
+.list { margin-top: 10px; max-height: 150px; overflow: auto; border-top: 1px solid var(--line); padding-top: 8px; }
+.list div { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 3px 0; }
+.list span { word-break: break-all; color: var(--ink2); }
+.list button { padding: 3px 8px; font-size: 12px; flex: none; }
+.note { color: var(--ink2); margin: 10px 0 0; word-break: break-word; }

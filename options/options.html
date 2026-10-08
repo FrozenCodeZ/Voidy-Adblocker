@@ -139,7 +139,7 @@
       <div class="card">
         <h3>If a site breaks</h3>
         <ol class="steps">
-          <li>Click the toolbar icon, then <b>Site looks broken? Ease off here</b>. It steps down one level and reloads.</li>
+          <li>Click the toolbar icon, then <b>Site looks broken? Fix this site</b>. Voidy asks a few Yes/No questions while it tests what it blocked there, then keeps allowing only what the site needs. To simply step down one level, use <b>Or just ease off here</b>.</li>
           <li>Still broken? Click it again, or pick <b>Lite</b>.</li>
           <li>Only the <i>pop-ups</i> are the problem (say, you need the site's chat)? Untick <b>Hide pop-ups &amp; widgets on this site</b>.</li>
           <li>Last resort: <b>Off</b> for that site. Everything else stays protected.</li>
@@ -248,6 +248,18 @@
       </div>
       <div class="sites" id="sites"></div>
       <p class="empty" id="no-sites">No site-specific settings yet.</p>
+    </div>
+    <div class="card">
+      <h3><i data-ico="star"></i>Shared fixes</h3>
+      <div class="tgl-list">
+        <label class="tgl" style="--c:var(--a1)"><i data-ico="star"></i><div><b>Use shared fixes</b><span>Small repairs and rules for sites that change often, from Voidy's GitHub. Plain data, checked before use. Updated every 6 hours.</span></div><span class="sw"><input type="checkbox" id="x-sharedfixes"><span></span></span></label>
+      </div>
+      <p class="hint" id="sharedfixes-line" role="status"></p>
+    </div>
+    <div class="card">
+      <h3><i data-ico="star"></i>Your fixes</h3>
+      <p class="hint">What "Fix this site" in the popup found and now allows, one site at a time.</p>
+      <div id="myfixes"></div>
     </div>
   </section>
 

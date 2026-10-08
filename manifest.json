@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Voidy Adblocker",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A cute little black hole that eats ads, trackers, pop-ups and malicious sites. Free forever, with a stealth mode.",
   "icons": {
     "16": "icons/icon16.png",
@@ -117,7 +117,8 @@
       "resources": [
         "surrogates/*",
         "guard/guard-frame.html",
-        "guard/blocked.html"
+        "guard/blocked.html",
+        "guard/fix-panel.html"
       ],
       "matches": [
         "http://*/*",

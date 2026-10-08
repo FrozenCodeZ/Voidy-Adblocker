@@ -1,6 +1,6 @@
 {
   "name": "voidy",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "icons": "node tools/render-icons.cjs",

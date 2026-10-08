@@ -204,5 +204,12 @@
   "live.net",
   "bbc.com",
   "nytimes.com"
- ]
+ ],
+ "fixes": {
+  "everyHours": 6,
+  "urls": [
+   "https://raw.githubusercontent.com/FrozenCodeZ/Voidy-Adblocker/main/data/site-fixes.json",
+   "https://cdn.jsdelivr.net/gh/FrozenCodeZ/Voidy-Adblocker@main/data/site-fixes.json"
+  ]
+ }
 }

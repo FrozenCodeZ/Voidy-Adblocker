@@ -60,7 +60,38 @@
   // (Firefox has no dynamic URLs: there the origin is simply that of getURL.)
   try { frameUrl = chrome.runtime.getURL("guard/guard-frame.html");
         extOrigin = frameUrl.startsWith("chrome-extension://") ? "chrome-extension://" + chrome.runtime.id : new URL(frameUrl).origin; } catch (e) {}
+  // "Fix this site": while Voidy tests this tab, its question panel sits in a corner.
+  let fixFrame = null;
+  function showFixPanel() {
+    if (fixFrame || window.top !== window || !frameUrl) return;
+    fixFrame = document.createElement("iframe");
+    fixFrame.src = chrome.runtime.getURL("guard/fix-panel.html");
+    fixFrame.allow = "clipboard-write";
+    fixFrame.style.cssText = "position:fixed!important;right:16px!important;bottom:16px!important;width:340px!important;height:150px!important;border:0!important;" +
+      "z-index:2147483647!important;border-radius:12px!important;box-shadow:0 8px 30px rgba(0,0,0,.45)!important;color-scheme:dark!important;background:#1b1f29!important;display:block!important";
+    const attach = () => { (document.body || document.documentElement).appendChild(fixFrame); };
+    if (document.body) attach(); else document.addEventListener("DOMContentLoaded", attach, { once: true });
+    window.addEventListener("message", (e) => {
+      if (!fixFrame || e.source !== fixFrame.contentWindow || !e.data) return;
+      if (e.data.height > 0) fixFrame.style.setProperty("height", Math.min(420, Math.ceil(e.data.height)) + "px", "important");
+      if (e.data.voidyFixPanel === "close") { fixFrame.remove(); fixFrame = null; }
+    });
+  }
+  // Feed ads (src/feed-main.js): hand over the markers, and pass its counts on
+  // for the popup's "Feed check" (counts only).
+  function feedBridge(feeds) {
+    try { document.documentElement.setAttribute("data-voidy-feed", JSON.stringify(feeds)); } catch (e) { return; }
+    let last = "";
+    const timer = setInterval(() => {
+      const now = document.documentElement.getAttribute("data-voidy-feed-count") || "";
+      if (!now || now === last) return;
+      last = now;
+      try { chrome.runtime.sendMessage({ type: "feedCheck", counts: JSON.parse(now) }); } catch (e) { clearInterval(timer); }
+    }, 2000);
+  }
   config.then((cfg) => {
+    if (cfg.fixPanel) showFixPanel();
+    if (Array.isArray(cfg.feeds) && cfg.feeds.length) feedBridge(cfg.feeds);
     const main = { level: cfg.level, guard: cfg.guard, sensitive: cfg.sensitive, auto: cfg.auto,
                    notifGuard: !!(cfg.annoy && cfg.annoy.notifications), frameUrl, extOrigin, nonce };
     try { document.dispatchEvent(new CustomEvent(ev("config"), { detail: toPage(main) })); } catch (e) {}

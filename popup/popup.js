@@ -3,8 +3,8 @@
 // background.js's "getPopup" response; nothing here counts anything itself.
 const $ = (id) => document.getElementById(id);
 const DONATE_URL = "https://buymeacoffee.com/FrozenCodeZ";
-const FEEDBACK_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdnOw3Pi8i2pA7U8xYF5TbeR8ogY5amwuTUmn8jpnRejN-NTA/viewform";
-const FILE_BUILD_VERSION = "1.0.2";
+const FEEDBACK_URL = (globalThis.VOIDY_LINKS || {}).feedback || "";
+const FILE_BUILD_VERSION = "1.0.3";
 const ORDER = ["off", "lite", "full"];
 const LADDER = ["off", "lite", "full", "stealth1", "stealth2", "stealth3"];  // mirrors background.js's ladder
 const HINTS = {
@@ -96,8 +96,18 @@ async function load() {
   refresh();
 }
 // Ask the background what's TRUE now and draw that, never the popup's own guess.
+let feedDetails = "";
+function showFeedCheck(f) {
+  if (!f || !/(^|\.)(facebook\.com|instagram\.com|x\.com|twitter\.com)$/.test(host)) { $("feedcheck").hidden = true; return; }
+  const keys = Object.entries(f.matched || {}).map(([k, n]) => `${k} ${n}`).join(", ");
+  const n = f.removed || 0;
+  $("feedcheck-text").textContent = n ? `Voidy removed ${n} ad${n === 1 ? "" : "s"} from this feed.` : "No feed ads found here yet.";
+  feedDetails = `${f.replies} feed replies, ${f.items} items read, ${n} ads removed` + (keys ? ` (${keys})` : "") + ".";
+  $("feedcheck").hidden = false;
+}
 function refresh() {
   chrome.runtime.sendMessage({ type: "getPopup", host, tabId, includeYtFields:isYouTube() }, async (r) => {
+    try { showFeedCheck(r && r.feedCheck); $("admuted").hidden = !(r && r.adMuted); } catch (_) {}
     if (!r) return;
     data = r;
     data.page = await livePageCounts(r);         // page totals straight from Chrome (rate-limit safe)
@@ -156,7 +166,7 @@ function disableAll() {
   VOIDY.setMood("idle"); VOIDY.say("Voidy only eats on regular websites.<br><small>Open any site to see what it's eating.</small>");
   $("power").disabled = true;
   document.querySelectorAll(".modes button").forEach((b) => (b.disabled = true));
-  $("broke").disabled = true; $("report").disabled = true; $("widgets").disabled = true; $("guard").disabled = true; $("pick").disabled = true;
+  $("broke").disabled = true; $("easeoff").disabled = true; $("report").disabled = true; $("widgets").disabled = true; $("guard").disabled = true; $("pick").disabled = true;
   $("site-controls").hidden = true;
   $("adv-toggle").disabled = true; $("wallnow").hidden = true;
   $("state").textContent = "";
@@ -462,7 +472,23 @@ function wireStaticControls() {
   document.querySelectorAll(".scope button").forEach((b) => b.addEventListener("click", () => { scope = b.dataset.scope; renderActivity(); }));
   $("widgets").addEventListener("change", (e) => chrome.runtime.sendMessage({ type: "setWidgets", host, on: e.target.checked }, () => chrome.tabs.reload()));
   $("guard").addEventListener("change", (e) => chrome.runtime.sendMessage({ type: "setGuardSite", host, on: e.target.checked }, () => chrome.tabs.reload()));
-  $("broke").addEventListener("click", stepDown);
+  // Feed check (Facebook, Instagram, X): what the feed filter saw and removed, counts only
+  $("feedcheck-copy").addEventListener("click", async () => {
+    const text = `Feed check for ${host}, Voidy ${chrome.runtime.getManifest().version}: ${feedDetails}`;
+    try { await navigator.clipboard.writeText(text); $("feedcheck-copy").textContent = "Copied"; } catch (_) { $("feedcheck-copy").textContent = "Copy failed"; }
+  });
+  // "Fix this site": the guided search; its questions appear in a panel on the page
+  $("broke").addEventListener("click", () => chrome.runtime.sendMessage({ type: "fixStart", host, tabId }, () => window.close()));
+  $("easeoff").addEventListener("click", stepDown);
+  // The same question here, for pages that don't allow Voidy's panel
+  chrome.runtime.sendMessage({ type: "getFixTest" }, (st) => {
+    if (!st || st.state !== "asking" || st.tabId !== tabId) return;
+    $("fixbox").hidden = false;
+    $("fixbox-q").textContent = `Voidy is testing this site (step ${st.round} of about ${st.of}). Does it work now?`;
+    $("fix-yes").onclick = () => chrome.runtime.sendMessage({ type: "fixAnswer", works: true }, () => window.close());
+    $("fix-no").onclick = () => chrome.runtime.sendMessage({ type: "fixAnswer", works: false }, () => window.close());
+    $("fix-stop").onclick = () => chrome.runtime.sendMessage({ type: "fixStop" }, () => window.close());
+  });
   $("report").addEventListener("click", copyReport);
   $("pick").addEventListener("click", startPicker);
   $("unhide").addEventListener("click", () => chrome.runtime.sendMessage({ type: "removeMyHide", host, all: true }, () => { $("unhide").hidden = true; chrome.tabs.reload(tabId); }));

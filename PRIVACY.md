@@ -1,6 +1,6 @@
 # Voidy privacy policy
 
-Last updated: 1 October 2026
+Last updated: 7 October 2026
 
 Voidy doesn't collect, sell or share personal data. It has no account, no
 analytics and no servers of its own.
@@ -22,15 +22,24 @@ addresses you visit are never sent anywhere to be checked.
   raw.githubusercontent.com, curbengh.github.io or malware-filter.gitlab.io. These are plain file downloads. Voidy sends nothing
   about you or your browsing with them, but like any download, those sites can
   see your IP address.
-- **YouTube settings:** a few times a day Voidy checks Voidy's own public GitHub
-  repository (github.com/FrozenCodeZ/Voidy-Adblocker, via raw.githubusercontent.com
-  or cdn.jsdelivr.net) for a small file of YouTube settings, so YouTube fixes
-  arrive without waiting for a store update. It contains plain values, never code.
+- **YouTube settings and site fixes:** a few times a day Voidy checks Voidy's own
+  public GitHub repository (github.com/FrozenCodeZ/Voidy-Adblocker, via
+  raw.githubusercontent.com or cdn.jsdelivr.net) for two small files: YouTube
+  settings, and site fixes (addresses to allow or block on a particular site,
+  rules for hiding ads, and the names of the fields that mark ads in some sites'
+  feeds). This lets fixes arrive without waiting for a store update. Both files
+  contain plain values, never code, and you can switch site fixes off under Sites.
 - **Buttons you click:** "Buy me a coffee" opens buymeacoffee.com, and "Send
   feedback" opens a Google Form. "Report a problem with this site" copies a
   short report to your clipboard (the site's name, Voidy's mode, and the names
   of sites blocked on that page, never full addresses or page content) and opens
-  the same form. Nothing is sent unless you paste it and submit the form yourself.
+  the same form. "Share this fix", shown after "Fix this site" finds what broke a
+  site, works the same way: it copies the site's name, the name of the address
+  Voidy now allows there, and Voidy's version and browser, and opens the form.
+  On Facebook, Instagram and X, "Copy details" next to the popup's feed line
+  copies only counts: feed replies read, ads removed, and the names of the
+  fields that marked them. Nothing is sent unless you paste it and submit the
+  form yourself.
 
 ## What Voidy tells websites
 

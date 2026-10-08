@@ -85,7 +85,11 @@
       <i data-ico="hide"></i><span><b>Hide an ad on this page</b><small>Click it, and Voidy eats it for good. You can also right-click an ad and choose Hide this with Voidy.</small></span>
     </button>
     <button class="broke-link" id="unhide" type="button" hidden><i data-ico="eye"></i><span id="unhide-text">Show my hidden items again</span></button>
-    <button class="broke-link" id="broke" type="button"><i data-ico="meteor"></i>Site looks broken? Ease off here</button>
+    <button class="broke-link" id="broke" type="button" title="Voidy tests what it blocked here, a few questions long, and keeps only what the site needs"><i data-ico="meteor"></i>Site looks broken? Fix this site</button>
+    <button class="broke-link small" id="easeoff" type="button">Or just ease off here</button>
+    <div class="note" id="admuted" hidden>Voidy muted an ad. The sound comes back when it ends.</div>
+    <div class="note" id="feedcheck" hidden><span id="feedcheck-text"></span> <button class="ghost" id="feedcheck-copy" type="button" title="Copies the counts behind this line, for a problem report">Copy details</button></div>
+    <div class="note" id="fixbox" hidden><b id="fixbox-q"></b><div class="fixrow"><button class="ghost" id="fix-yes" type="button">Yes</button><button class="ghost" id="fix-no" type="button">No</button><button class="ghost" id="fix-stop" type="button">Stop</button></div></div>
     <button class="broke-link" id="report" type="button" title="Copies what Voidy blocked on this page (site names only) and opens the feedback form"><i data-ico="chat"></i>Report a problem with this site</button>
     <div class="note" id="report-note" hidden></div>
     <div class="stuck" id="stuck" hidden>
@@ -175,6 +179,7 @@
   <script src="../lib/voidy-life.js"></script>
   <script src="voidy.js"></script>
   <script src="../lib/cosmos.js"></script>
+  <script src="../lib/links.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -11,6 +11,11 @@ no account.
 - Starts YouTube videos without ads, skips the ad breaks Twitch stitches into
   streams by switching to an ad-free copy of the same stream, and hides
   Reddit's promoted posts.
+- Removes sponsored posts from X, Instagram and Facebook feeds. These sites
+  mark each ad in the data behind the feed, and Voidy drops the marked posts
+  before the page shows them. Posts labelled "Sponsored" or "Promoted" that
+  get through are hidden. These sites change often, so an ad can still slip
+  through.
 - Warns you before a dangerous site loads (malware, phishing, scams, fake
   shops). You can still continue if you're sure.
 - Warns you about look-alike sites such as "paypa1.com" or "g00gle.com" before
@@ -29,9 +34,14 @@ no account.
   JavaScript, on any site you choose.
 - Offers Stealth modes for sites that refuse to work with an ad blocker. No
   blocker can promise to be undetectable, but they help on many sites.
-- Eases off on one site with a single click when that site looks broken.
-  "Report a problem" copies a short report with site names only, for the
-  feedback form.
+- When a site looks broken, *Fix this site* in the popup asks a few Yes/No
+  questions while it tests what Voidy blocked there, then allows only the one
+  thing the site needs. *Or just ease off here* turns protection down on that
+  site in one click. *Report a problem* copies a short report with site names
+  only, for the feedback form.
+- Fetches small site fixes from this repository a few times a day (plain data,
+  never code), so a broken site or a new ad trick can be fixed without waiting
+  for a store update. You can switch them off under Sites.
 
 ## Modes (per site, in the popup)
 

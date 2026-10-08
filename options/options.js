@@ -257,6 +257,39 @@ function renderSites() {
   }
 }
 
+// ---- shared fixes from Voidy's GitHub
+async function showSharedFixes() {
+  const st = await send({ type: "getSharedFixes" });
+  if (!st) return;
+  $("x-sharedfixes").checked = st.on;
+  const n = st.sites === 1 ? "1 site" : st.sites + " sites";
+  $("sharedfixes-line").textContent = `Shared fixes from Voidy's GitHub: ${n}` +
+    (st.error ? `. Last check failed: ${st.error}` : st.updated ? ". Updated " + ago(st.updated) + "." : ".");
+}
+$("x-sharedfixes").addEventListener("change", async (e) => { await send({ type: "setSharedFixes", on: e.target.checked }); saved(); showSharedFixes(); });
+showSharedFixes();
+
+// ---- your fixes ("Fix this site" in the popup)
+const FIX_LABEL = { "#hiding": "Voidy's page hiding", "#scripts": "Voidy's page scripts" };
+async function showMyFixes() {
+  const all = (await send({ type: "listMyFixes" })) || {};
+  const box = $("myfixes"); box.innerHTML = "";
+  const rows = [];
+  for (const [site, f] of Object.entries(all).sort()) {
+    for (const d of f.allow || []) rows.push([site, d]);
+    if (f.noHiding) rows.push([site, "#hiding"]);
+    if (f.noScripts) rows.push([site, "#scripts"]);
+  }
+  if (!rows.length) { box.append(el("p", { class: "hint" }, "Nothing yet.")); return; }
+  for (const [site, item] of rows) {
+    const rm = el("button", { class: "ghost", type: "button" }, "Remove");
+    rm.addEventListener("click", async () => { await send({ type: "removeMyFix", host: site, item }); saved(); showMyFixes(); });
+    box.append(el("div", { class: "myhide" }, el("b", {}, site), el("code", {}, "allows " + (FIX_LABEL[item] || item)), rm));
+  }
+}
+chrome.storage.onChanged.addListener((c) => { if (c.myFixes) showMyFixes(); });
+showMyFixes();
+
 // ---- elements you hid (popup picker)
 async function showMyHides() {
   const all = (await send({ type: "listMyHides" })) || {};
@@ -337,7 +370,8 @@ const LOGKIND = {
   climb: { g: "stealth", ico: "ghost", c: "#c46cff" }, stuck: { g: "stealth", ico: "radar", c: "#f0a92b" },
   "gentle-retry": { g: "stealth", ico: "down", c: "#3ecf8e" }, "retry-failed": { g: "stealth", ico: "ghost", c: "#f0566f" },
   "retry-kept": { g: "stealth", ico: "star", c: "#3ecf8e" }, broke: { g: "you", ico: "x", c: "#f0a92b" },
-  resolve: { g: "you", ico: "star", c: "#4d9fff" }, trust: { g: "guard", ico: "route", c: "#2fc6e0" }
+  resolve: { g: "you", ico: "star", c: "#4d9fff" }, trust: { g: "guard", ico: "route", c: "#2fc6e0" },
+  sharedFix: { g: "stealth", ico: "star", c: "#3ecf8e" }, fixFound: { g: "you", ico: "star", c: "#3ecf8e" }
 };
 function why(sig) {
   if (!sig) return "";
@@ -359,6 +393,8 @@ function sentence(e) {
     case "lookalike": return [`Warned you about ${e.host}`, `It looked like ${e.brand} but isn't.`];
     case "malware-proceed": return [`You continued to ${e.host}`, "It's on the dangerous-site list; allowed until the browser closes."];
     case "trust": return [`You chose Always allow for ${String(e.host).replace(">", " → ")}`, "Redirects between these sites won't ask again."];
+    case "sharedFix": return [`Used a shared fix on ${e.host}`, "A small repair from Voidy's GitHub for this site."];
+    case "fixFound": return [`Fixed ${e.host}`, `Voidy now allows ${e.item} there. You can remove this under Sites.`];
     default: return [e.kind + " " + (e.host || ""), ""];
   }
 }
@@ -371,7 +407,7 @@ const TIPS = [
   "Voidy warns you about look-alike sites such as “paypa1.com” before you type a password.",
   "Block lists refresh themselves: the dangerous-site list daily, ads and trackers every few days.",
   "Double-click Voidy in the popup. It likes you back.",
-  "A site looks broken? “Site looks broken? Ease off here” in the popup steps Voidy down one level on that site only.",
+  "A site looks broken? “Fix this site” in the popup finds the one thing Voidy blocked that the site needs, with a few Yes/No questions.",
 ];
 let tipAt = Math.floor(Math.random() * TIPS.length);
 function showTip() { $("tip").innerHTML = TIPS[tipAt % TIPS.length]; }   // our own fixed text

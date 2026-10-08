@@ -1,0 +1,115 @@
+{
+ "_about": "Shared site fixes Voidy refreshes from GitHub every 6 hours: plain data only (addresses to allow or block on a site, hiding rules, feed ad markers). Checked by src/site-fixes.js before use; a bad entry is skipped.",
+ "version": 1,
+ "sites": {
+  "x.com": {
+   "feeds": [
+    {
+     "path": "/i/api/graphql/*",
+     "markers": [
+      {
+       "key": "content.itemContent.promotedMetadata"
+      },
+      {
+       "key": "item.itemContent.promotedMetadata"
+      }
+     ]
+    }
+   ],
+   "hide": [
+    "div[data-testid=\"cellInnerDiv\"]:has(span:has-visible-text(/^(Ad|Promoted|Anzeige|Publicité|Anuncio)$/))"
+   ]
+  },
+  "twitter.com": {
+   "feeds": [
+    {
+     "path": "/i/api/graphql/*",
+     "markers": [
+      {
+       "key": "content.itemContent.promotedMetadata"
+      },
+      {
+       "key": "item.itemContent.promotedMetadata"
+      }
+     ]
+    }
+   ],
+   "hide": [
+    "div[data-testid=\"cellInnerDiv\"]:has(span:has-visible-text(/^(Ad|Promoted|Anzeige|Publicité|Anuncio)$/))"
+   ]
+  },
+  "instagram.com": {
+   "feeds": [
+    {
+     "path": "/api/graphql",
+     "markers": [
+      {
+       "key": "node.ad_id"
+      },
+      {
+       "key": "node.media.ad_id"
+      },
+      {
+       "key": "node.ad.ad_id"
+      }
+     ]
+    },
+    {
+     "path": "/graphql/query",
+     "markers": [
+      {
+       "key": "node.ad_id"
+      },
+      {
+       "key": "node.media.ad_id"
+      },
+      {
+       "key": "node.ad.ad_id"
+      }
+     ]
+    }
+   ],
+   "hide": [
+    "article:has(span:has-visible-text(/^(Sponsored|Gesponsert|Sponsorisé|Patrocinado|Sponsorizzato|Gesponsord|Publicidad|Sponsorisée)$/))"
+   ]
+  },
+  "facebook.com": {
+   "feeds": [
+    {
+     "path": "/api/graphql/",
+     "jsonLines": true,
+     "markers": [
+      {
+       "key": "node.sponsored_data"
+      },
+      {
+       "key": "node.category",
+       "equals": "SPONSORED"
+      },
+      {
+       "key": "data.node.sponsored_data"
+      },
+      {
+       "key": "data.node.category",
+       "equals": "SPONSORED"
+      }
+     ]
+    }
+   ],
+   "hide": [
+    "div[aria-posinset]:has(span:has-visible-text(/^(Sponsored|Gesponsert|Sponsorisé|Patrocinado|Sponsorizzato|Gesponsord|Publicidad|Sponsorisée)$/))",
+    "div[role=\"article\"]:has(span:has-visible-text(/^(Sponsored|Gesponsert|Sponsorisé|Patrocinado|Sponsorizzato|Gesponsord|Publicidad|Sponsorisée)$/))"
+   ]
+  },
+  "reddit.com": {
+   "hide": [
+    "shreddit-ad-post",
+    "shreddit-comments-page-ad",
+    "shreddit-dynamic-ad-link"
+   ]
+  },
+  "open.spotify.com": {
+   "off": true
+  }
+ }
+}

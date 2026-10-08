@@ -135,6 +135,39 @@ globalThis.LIST_UPDATES = (() => {
     return true;
   }
 
+  // Shared site fixes (data/site-fixes.json, src/site-fixes.js checks them).
+  // A download that fails the checks leaves the previous copy in use.
+  async function updateFixes(cfg, force) {
+    const src = cfg.fixes;
+    if (!src || !src.urls || !src.urls.length) return false;
+    const { siteFixes = {} } = await chrome.storage.local.get("siteFixes");
+    if (!force && Date.now() - (siteFixes.updated || 0) < src.everyHours * 3600e3) return false;
+    try {
+      let raw = null;
+      try { raw = JSON.parse(await fetchText(src.urls)); } catch (e) { throw new Error("Shared fixes file could not be read: " + (e && e.message || e)); }
+      const fresh = globalThis.VOIDY_FIXES.validFixes(raw);
+      if (!fresh) throw new Error("Shared fixes file looked wrong");
+      await chrome.storage.local.set({ siteFixes: { ...fresh, updated: Date.now() }, fixesCheck: { checked: Date.now(), error: "" } });
+      return JSON.stringify(fresh) !== JSON.stringify({ version: siteFixes.version, sites: siteFixes.sites });
+    } catch (e) {
+      await chrome.storage.local.set({ fixesCheck: { checked: Date.now(), error: String(e && e.message || e).slice(0, 160) } });
+      return false;
+    }
+  }
+  let bundledFixes = null;
+  async function fixes() {
+    if (!bundledFixes) {
+      try { bundledFixes = globalThis.VOIDY_FIXES.validFixes(await (await fetch(chrome.runtime.getURL("data/site-fixes.json"))).json()); } catch (_) {}
+      bundledFixes = bundledFixes || { version: 0, sites: {} };
+    }
+    const { siteFixes } = await chrome.storage.local.get("siteFixes");
+    if (!siteFixes) return bundledFixes;
+    if (!fixesMemo || fixesMemo.updated !== siteFixes.updated) fixesMemo = { updated: siteFixes.updated, value: globalThis.VOIDY_FIXES.validFixes(siteFixes) };
+    const stored = fixesMemo.value;
+    return stored && stored.version >= bundledFixes.version ? stored : bundledFixes;
+  }
+  let fixesMemo = null;                                  // the stored copy, checked once per download
+
   async function load() {
     if (!cache) cache = (await chrome.storage.local.get({ freshLists: {} })).freshLists;
     return cache;
@@ -175,9 +208,10 @@ globalThis.LIST_UPDATES = (() => {
         if (cat !== ORDER[ORDER.length - 1]) for (const list of await activeDomains(cat, fresh)) for (const d of list) taken.add(d);
       }
       try { await updateYoutube(cfg, force); } catch (_) {}      // keeps the previous settings on failure
+      const fixesChanged = await updateFixes(cfg, force);       // keeps the previous copy on failure
       if (changed) { cache = fresh; await chrome.storage.local.set({ freshLists: fresh }); }
       await chrome.storage.local.set({ listUpdates: { ...listUpdates, cats } });
-      if (changed) await onChange();
+      if (changed || fixesChanged) await onChange();
       return status();
     })();
     try { return await running; } finally { running = null; }
@@ -229,7 +263,7 @@ globalThis.LIST_UPDATES = (() => {
   }
   chrome.alarms.onAlarm.addListener((a) => { if (a.name === CHECK_ALARM) run().catch(() => {}); });
 
-  return { run, status, freshRules, activeDomains, onInstalled, schedule, parseSource, validYoutube,
+  return { run, status, freshRules, activeDomains, onInstalled, schedule, parseSource, validYoutube, fixes,
     setAuto: async (on) => { const { listUpdates = {} } = await chrome.storage.local.get("listUpdates");
       await chrome.storage.local.set({ listUpdates: { ...listUpdates, auto: !!on } }); if (on) await schedule(); },
     init: (fn) => { onChange = fn; } };

@@ -2,6 +2,9 @@
 // "hide the post that contains the word Sponsored". ISOLATED world, loaded
 // before annoyances.js, which hands it the rules for this site.
 //   A:has-text(Sponsored)     A elements whose text contains "Sponsored" (or /regex/)
+//   A:has-visible-text(x)     same, but only the text shown on screen, so letters a
+//                             site hides inside a label can't break the match (short
+//                             elements only: labels, not whole posts)
 //   A:-abp-contains(text)     same, older spelling
 //   A:has(B:has-text(x))      A that contains such a B (plain :has() stays CSS)
 //   A:upward(2) / A:upward(B) the element 2 levels up / the nearest B above A
@@ -11,8 +14,9 @@ globalThis.VOIDY_PROC = (() => {
   const RECHECK_MS = 600;           // at most one re-check this often while the page changes
   const MAX_RULES = 300;
   // --------------------------------------------------------------------------
-  const PROC = /:(has-text|-abp-contains|upward)\(/;
-  const OP = /^:(has-text|-abp-contains|-abp-has|has|upward)\(/;
+  const PROC = /:(has-visible-text|has-text|-abp-contains|upward)\(/;
+  const OP = /^:(has-visible-text|has-text|-abp-contains|-abp-has|has|upward)\(/;
+  const LABEL_MAX = 60;             // :has-visible-text only reads elements this short (by their raw text)
   const isProcedural = (sel) => PROC.test(sel);
 
   function closeParen(s, open) {
@@ -54,6 +58,7 @@ globalThis.VOIDY_PROC = (() => {
       if (css.trim()) steps.push({ css });
       css = "";
       if (name === "has-text" || name === "-abp-contains") steps.push({ text: textTest(arg) });
+      else if (name === "has-visible-text") steps.push({ text: textTest(arg), visible: true });
       else if (name === "upward") steps.push({ up: /^\s*\d+\s*$/.test(arg) ? +arg : arg.trim() });
       else steps.push({ has: parse(arg.trim(), true) });
     }
@@ -72,7 +77,8 @@ globalThis.VOIDY_PROC = (() => {
         else if (/^[>\s]/.test(st.css)) els = els.flatMap((e) => all(e, ":scope " + s));
         else if (/^[+~]/.test(s)) return [];                       // sibling steps: not supported
         else els = els.filter((e) => { try { return e.matches(s); } catch (_) { return false; } });
-      } else if (st.text) els = els.filter((e) => st.text(e.textContent || ""));
+      } else if (st.text && st.visible) els = els.filter((e) => (e.textContent || "").length <= LABEL_MAX && st.text(e.innerText || ""));
+      else if (st.text) els = els.filter((e) => st.text(e.textContent || ""));
       else if (st.has) els = els.filter((e) => run(st.has, e).length > 0);
       else if (typeof st.up === "number") els = els.map((e) => { for (let n = st.up; e && n > 0; n--) e = e.parentElement; return e; }).filter(Boolean);
       else els = els.map((e) => { try { return e.parentElement && e.parentElement.closest(st.up); } catch (_) { return null; } }).filter(Boolean);
